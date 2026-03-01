@@ -26,15 +26,15 @@ const HomeView = () => (
                 <div className="tutorial-item horizontal">
                     <div className="gesture-icon">← / →</div>
                     <div className="gesture-text">
-                        <strong>RELOAD / VISIT</strong>
-                        <span>左で再読込、右で訪問</span>
+                        <strong>DOWN / UPVOTE</strong>
+                        <span>左で低評価、右で高評価</span>
                     </div>
                 </div>
                 <div className="tutorial-item action">
                     <div className="gesture-icon">●</div>
                     <div className="gesture-text">
                         <strong>DETAILS</strong>
-                        <span>ロゴをタップして詳細</span>
+                        <span>タップして詳細（再読込・訪問）</span>
                     </div>
                 </div>
                 <div className="tutorial-item action">
@@ -181,20 +181,11 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
             else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
         } else {
-            // Horizontal Swipe -> Reload / Visit
+            // Horizontal Swipe -> Vote
             if (Math.abs(dx) > SWIPE_THRESHOLD) {
-                if (dx < -SWIPE_THRESHOLD) {
-                    const app = apps[activeIndexRef.current];
-                    const iframe = iframeRefs.current[app.id];
-                    if (iframe) iframe.src = iframe.src;
-                    if (navigator.vibrate) navigator.vibrate(30);
-                } else {
-                    const app = apps[activeIndexRef.current];
-                    if (app.url !== 'internal:home') {
-                        window.open(app.url, '_blank');
-                        if (navigator.vibrate) navigator.vibrate(50);
-                    }
-                }
+                if (dx < -SWIPE_THRESHOLD) console.log('Downvoted:', apps[activeIndexRef.current].name);
+                else console.log('Upvoted:', apps[activeIndexRef.current].name);
+                if (navigator.vibrate) navigator.vibrate([30, 50]);
             }
         }
     };
@@ -249,17 +240,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
                     else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
                 } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
-                    if (dx < -SWIPE_THRESHOLD) {
-                        const app = apps[activeIndexRef.current];
-                        const iframe = iframeRefs.current[app.id];
-                        if (iframe) iframe.src = iframe.src;
-                    }
-                    else {
-                        const app = apps[activeIndexRef.current];
-                        if (app.url !== 'internal:home') {
-                            window.open(app.url, '_blank');
-                        }
-                    }
+                    if (dx < -SWIPE_THRESHOLD) console.log('Downvoted:', apps[activeIndexRef.current].name);
+                    else console.log('Upvoted:', apps[activeIndexRef.current].name);
+                    if (navigator.vibrate) navigator.vibrate([30, 50]);
                 }
                 setDragOffset({ x: 0, y: 0 });
             }
@@ -361,7 +344,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             )}
             {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && (
                 <div className="gesture-hint-h">
-                    {dragOffset.x < 0 ? 'RELOAD SITE' : 'VISIT'}
+                    {dragOffset.x < 0 ? 'DOWNVOTE' : 'UPVOTE'}
                 </div>
             )}
 
@@ -399,7 +382,24 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                                 </div>
                             )}
                         </div>
-                        <button className="ds-close" onClick={() => setIsDetailOpen(false)}>
+
+                        <div className="ds-actions-grid">
+                            <button className="ds-btn-secondary" onClick={() => {
+                                if (iframeRefs.current[currentApp.id]) {
+                                    iframeRefs.current[currentApp.id]!.src = currentApp.url;
+                                    setIsDetailOpen(false);
+                                }
+                            }}>
+                                サイトを再読み込み
+                            </button>
+                            <button className="ds-btn-primary" onClick={() => {
+                                window.open(currentApp.url, '_blank');
+                            }}>
+                                サイトを開く
+                            </button>
+                        </div>
+
+                        <button className="ds-close-light" onClick={() => setIsDetailOpen(false)}>
                             閉じる
                         </button>
                     </div>

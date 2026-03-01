@@ -17,10 +17,10 @@ const DEFAULT_APPS: AppMeta[] = [
         url: 'internal:home',
         tagline: 'Pirasa へようこそ',
         analysis: [
-            'ジェスチャーでサクサク移動。',
-            'ロゴを上にスライドで次のサイトへ。',
-            'タップで詳細、長押しで移動。',
-            'ダブルクリックで設定を開く。',
+            '上にスワイプで次のサイトへ。',
+            '左で低評価（Downvote）、右で高評価（Upvote）。',
+            'タップで詳細を開き、再読込やサイト訪問が可能。',
+            'ダブルクリックで設定画面。',
         ],
         revenue: '無料',
         merit: '直感的なインターフェースで新しいWeb体験。',
@@ -157,7 +157,7 @@ const DEFAULT_APPS: AppMeta[] = [
 ];
 
 // Bump version when default app list changes to force localStorage refresh
-const STORAGE_KEY = 'pirasa_apps_v8';
+const STORAGE_KEY = 'pirasa_apps_v9';
 
 export function useApps() {
     const [apps, setApps] = useState<AppMeta[]>(() => {

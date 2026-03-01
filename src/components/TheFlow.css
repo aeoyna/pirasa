@@ -250,6 +250,24 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.gesture-hint-h:has(input[value="DOWNVOTE"]),
+/* Just for logical separation if classes were dynamic */
+.gesture-hint-h {
+    transition: all 0.3s ease;
+}
+
+/* Vertical hints (V) use standard red/blue */
+/* Horizontal hints (H) now use voting colors */
+.gesture-hint-h {
+    color: #ff00ff;
+    /* Upvote Magenta */
+    text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+}
+
+.gesture-hint-h:nth-of-type(1) {
+    /* Just a trick or better yet, use data attrs or conditional classes in JSX if I had them, but let's keep it simple style-wise */
+}
+
 /* ─── Progress dots ─────────────────────────────────────── */
 .progress-dots {
     position: fixed;
@@ -384,20 +402,60 @@
     font-weight: bold;
 }
 
-.ds-close {
-    margin-top: 20px;
-    background: #fff;
-    color: #000;
-    border: none;
+.ds-close-light {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
     padding: 18px;
     border-radius: 16px;
-    font-size: 1.1rem;
-    font-weight: bold;
+    font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    margin-top: 10px;
+    transition: all 0.2s ease;
 }
 
-.ds-close:active {
+.ds-close-light:active {
+    background: rgba(255, 255, 255, 0.05);
+    transform: scale(0.98);
+}
+
+.ds-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.ds-btn-primary,
+.ds-btn-secondary {
+    padding: 16px;
+    border-radius: 16px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.ds-btn-primary {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+}
+
+.ds-btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ds-btn-primary:active,
+.ds-btn-secondary:active {
     transform: scale(0.95);
 }
 
