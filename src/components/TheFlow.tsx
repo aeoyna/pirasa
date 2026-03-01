@@ -111,12 +111,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     };
 
     const handleStart = (clientX: number, clientY: number) => {
-        // Only allow interaction from top/bottom 80px
-        const margin = 80;
-        const isMargin = clientY < margin || clientY > window.innerHeight - margin;
-
-        if (!isMargin && activeIndexRef.current !== 0) return; // Allow anywhere on home
-
+        // Allow interaction from anywhere on the screen
         gestureStart.current = { x: clientX, y: clientY, time: Date.now() };
         setIsInteracting(true);
         setInteractionPos({
