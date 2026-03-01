@@ -81,7 +81,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         }
     };
 
-    const handleLogoTouchEnd = (e: React.TouchEvent) => {
+    const handleLogoTouchEnd = () => {
         if (longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
             longPressTimeout.current = null;
