@@ -161,8 +161,8 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         // Reset visual offset
         setDragOffset({ x: 0, y: 0 });
 
-        // Tap detected (More forgiving: increased radius to 15px and duration to 350ms)
-        if (Math.max(Math.abs(dx), Math.abs(dy)) < 15 && duration < 350) {
+        // Tap detected (More forgiving: increased radius to 20px and duration to 400ms)
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 20 && duration < 400) {
             const now = Date.now();
             if (now - lastTapTime.current < 400) {
                 onOpenAdmin();
@@ -283,6 +283,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     }
 
     const currentApp = apps[activeIndex];
+
+    // Safety check: if currentApp is gone (e.g. index sync issue), don't crash the render
+    if (total > 0 && !currentApp) return null;
 
     return (
         <div className="flow-root" ref={containerRef}>
