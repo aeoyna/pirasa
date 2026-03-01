@@ -92,19 +92,19 @@
 .tutorial-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 15px;
     margin: 20px 0;
 }
 
 .tutorial-item {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 24px;
+    padding: 16px;
     border-radius: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     backdrop-filter: blur(10px);
 }
 
@@ -168,12 +168,19 @@
     height: 80px;
     cursor: pointer;
     z-index: 1000;
-    transition: filter 0.3s ease;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+    /* Made logo transparent */
+}
+
+.pirasa-controller:hover {
+    opacity: 1;
+    /* Full opacity on hover or interaction */
 }
 
 .pirasa-controller.moving {
     cursor: grabbing;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 .controller-ring {

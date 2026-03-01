@@ -10,17 +10,17 @@ const HomeView = () => (
 
             <div className="tutorial-grid">
                 <div className="tutorial-item vertical">
-                    <div className="gesture-icon">↓</div>
+                    <div className="gesture-icon">↑</div>
                     <div className="gesture-text">
                         <strong>NEXT</strong>
-                        <span>ロゴを下にスライド</span>
+                        <span>ロゴを上にスライド</span>
                     </div>
                 </div>
                 <div className="tutorial-item vertical">
-                    <div className="gesture-icon">↑</div>
+                    <div className="gesture-icon">↓</div>
                     <div className="gesture-text">
                         <strong>PREV</strong>
-                        <span>ロゴを上にスライド</span>
+                        <span>ロゴを下にスライド</span>
                     </div>
                 </div>
                 <div className="tutorial-item horizontal">
@@ -30,18 +30,32 @@ const HomeView = () => (
                         <span>左で再読込、右で訪問</span>
                     </div>
                 </div>
-                <div className="tutorial-item tap">
+                <div className="tutorial-item action">
+                    <div className="gesture-icon">●</div>
+                    <div className="gesture-text">
+                        <strong>DETAILS</strong>
+                        <span>ロゴをタップして詳細</span>
+                    </div>
+                </div>
+                <div className="tutorial-item action">
+                    <div className="gesture-icon">●+</div>
+                    <div className="gesture-text">
+                        <strong>MOVE</strong>
+                        <span>ロゴを長押しで移動</span>
+                    </div>
+                </div>
+                <div className="tutorial-item action">
                     <div className="gesture-icon">●●</div>
                     <div className="gesture-text">
                         <strong>SETTINGS</strong>
-                        <span>ロゴをダブルクリック</span>
+                        <span>ダブルクリックで設定</span>
                     </div>
                 </div>
             </div>
 
             <div className="home-footer">
-                <p>Start by swiping down the logo</p>
-                <div className="scroll-indicator">↓</div>
+                <p>Start by swiping up the logo</p>
+                <div className="scroll-indicator">↑</div>
             </div>
         </div>
     </div>
@@ -163,9 +177,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
 
         // Swipe detected
         if (Math.abs(dy) > Math.abs(dx)) {
-            // Vertical Swipe -> Navigation (DOWN = NEXT)
-            if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
-            else if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
+            // Vertical Swipe -> Navigation (UP = NEXT)
+            if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
+            else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
         } else {
             // Horizontal Swipe -> Reload / Visit
             if (Math.abs(dx) > SWIPE_THRESHOLD) {
@@ -232,8 +246,8 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 const dx = dragOffset.x;
                 const dy = dragOffset.y;
                 if (Math.abs(dy) > Math.abs(dx)) {
-                    if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
-                    else if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
+                    if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
+                    else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
                 } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
                     if (dx < -SWIPE_THRESHOLD) {
                         const app = apps[activeIndexRef.current];
@@ -317,7 +331,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                         const ady = Math.abs(dy);
 
                         if (ady > adx && ady > SWIPE_THRESHOLD) {
-                            return dy > 0 ? 'hue-rotate(120deg) drop-shadow(0 0 15px #00ff00)' : 'hue-rotate(220deg) drop-shadow(0 0 15px #0000ff)';
+                            return dy < 0 ? 'hue-rotate(120deg) drop-shadow(0 0 15px #00ff00)' : 'hue-rotate(220deg) drop-shadow(0 0 15px #0000ff)';
                         }
                         if (adx > ady && adx > SWIPE_THRESHOLD) {
                             return dx < 0 ? 'hue-rotate(45deg) drop-shadow(0 0 15px #ffff00)' : 'hue-rotate(280deg) drop-shadow(0 0 15px #ff00ff)';
@@ -339,7 +353,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             {/* Gesture feedback hints */}
             {Math.abs(dragOffset.y) > SWIPE_THRESHOLD && (
                 <div className="gesture-hint-v">
-                    {dragOffset.y > 0 ? 'NEXT' : 'PREV'}
+                    {dragOffset.y < 0 ? 'NEXT' : 'PREV'}
                 </div>
             )}
             {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && (
