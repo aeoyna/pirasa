@@ -2,8 +2,8 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { AppMeta } from '../hooks/useApps';
 import './TheFlow.css';
 
-const HomeView: React.FC<{ onOpenMyPage: () => void }> = ({ onOpenMyPage }) => (
-    <div className="slide">
+const HomeView = () => (
+    <div className="home-view">
         <div className="home-content">
             <h1 className="home-title">Pirasa</h1>
             <p className="home-subtitle">Next Generation Zap-App Store</p>
@@ -54,10 +54,7 @@ const HomeView: React.FC<{ onOpenMyPage: () => void }> = ({ onOpenMyPage }) => (
             </div>
 
             <div className="home-footer">
-                <button className="my-page-btn" onClick={onOpenMyPage}>
-                    👤 MY PAGE
-                </button>
-                <p>Start by swiping up the logo</p>
+                <p>上下の余白エリアをスワイプして操作</p>
                 <div className="scroll-indicator">↑</div>
             </div>
         </div>
@@ -67,22 +64,19 @@ const HomeView: React.FC<{ onOpenMyPage: () => void }> = ({ onOpenMyPage }) => (
 interface Props {
     apps: AppMeta[];
     onOpenAdmin: () => void;
-    onOpenMyPage: () => void;
-    isSaved: (id: string) => boolean;
-    toggleSave: (id: string) => void;
 }
 
 const SWIPE_THRESHOLD = 40;
 const LONG_PRESS_DELAY = 500;
 
-export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSaved, toggleSave }) => {
+export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-    // Controller Position (%, default center-bottom)
-    const [pos, setPos] = useState({ x: 50, y: 85 });
-    const [isMovingLogo, setIsMovingLogo] = useState(false);
+    // Interaction State (Ghost UI)
+    const [isInteracting, setIsInteracting] = useState(false);
+    const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
 
     // Iframe Refs to handle navigation
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
@@ -93,7 +87,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
     activeIndexRef.current = activeIndex;
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const logoRef = useRef<HTMLDivElement>(null);
 
     // Gesture tracking
     const gestureStart = useRef({ x: 0, y: 0, time: 0 });
@@ -107,6 +100,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
         if (activeIndex >= total && total > 0) setActiveIndex(total - 1);
     }, [total, activeIndex]);
 
+    const [isInteracting, setIsInteracting] = useState(false);
+    const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
+
     const goTo = useCallback((nextIndex: number) => {
         if (nextIndex < 0 || nextIndex >= totalRef.current || isAnimating.current) return;
         isAnimating.current = true;
@@ -115,19 +111,21 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
         setTimeout(() => { isAnimating.current = false; }, 450);
     }, []);
 
-    useEffect(() => {
-        const handleJump = (e: any) => {
-            if (typeof e.detail === 'number') goTo(e.detail);
-        };
-        window.addEventListener('pirasa:jump', handleJump);
-        return () => window.removeEventListener('pirasa:jump', handleJump);
-    }, [goTo]);
+    // ── Gesture Helpers (Ghost UI: Margin-Only) ───────────────────────
 
-    // ── Gesture Helpers ──────────────────────────────────────────────
+    const handleStart = (clientX: number, clientY: number) => {
+        // Only allow interaction from top/bottom 80px
+        const margin = 80;
+        const isMargin = clientY < margin || clientY > window.innerHeight - margin;
 
-    const handleLogoTouchStart = (e: React.TouchEvent) => {
-        const touch = e.touches[0];
-        gestureStart.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+        if (!isMargin && activeIndexRef.current !== 0) return; // Allow anywhere on home
+
+        gestureStart.current = { x: clientX, y: clientY, time: Date.now() };
+        setIsInteracting(true);
+        setInteractionPos({
+            x: (clientX / window.innerWidth) * 100,
+            y: (clientY / window.innerHeight) * 100
+        });
 
         longPressTimeout.current = window.setTimeout(() => {
             setIsMovingLogo(true);
@@ -135,140 +133,88 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
         }, LONG_PRESS_DELAY);
     };
 
-    const handleLogoTouchMove = (e: React.TouchEvent) => {
-        const touch = e.touches[0];
-        const dx = touch.clientX - gestureStart.current.x;
-        const dy = touch.clientY - gestureStart.current.y;
+    const handleMove = (clientX: number, clientY: number) => {
+        if (!isInteracting) return;
+
+        const dx = clientX - gestureStart.current.x;
+        const dy = clientY - gestureStart.current.y;
+
+        setInteractionPos({
+            x: (clientX / window.innerWidth) * 100,
+            y: (clientY / window.innerHeight) * 100
+        });
 
         if (isMovingLogo) {
-            const px = Math.max(5, Math.min(95, (touch.clientX / window.innerWidth) * 100));
-            const py = Math.max(5, Math.min(95, (touch.clientY / window.innerHeight) * 100));
-            setPos({ x: px, y: py });
+            // In Ghost UI, "moving" just updates the ghost pos
         } else {
-            // Gesture mode
             if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
                 if (longPressTimeout.current) {
                     clearTimeout(longPressTimeout.current);
                     longPressTimeout.current = null;
                 }
+                setDragOffset({ x: dx, y: dy });
             }
-            setDragOffset({ x: dx, y: dy });
         }
     };
 
-    const handleLogoTouchEnd = () => {
-        if (longPressTimeout.current) {
-            clearTimeout(longPressTimeout.current);
-            longPressTimeout.current = null;
-        }
-
-        if (isMovingLogo) {
-            setIsMovingLogo(false);
-            setDragOffset({ x: 0, y: 0 });
-            return;
-        }
+    const handleEnd = () => {
+        if (!isInteracting) return;
 
         const dx = dragOffset.x;
         const dy = dragOffset.y;
         const duration = Date.now() - gestureStart.current.time;
 
-        // Reset visual offset
+        if (longPressTimeout.current) {
+            clearTimeout(longPressTimeout.current);
+            longPressTimeout.current = null;
+        }
+
+        setIsMovingLogo(false);
+        setIsInteracting(false);
         setDragOffset({ x: 0, y: 0 });
 
-        // Tap detected (More forgiving: increased radius to 20px and duration to 400ms)
+        // Tap detected
         if (Math.max(Math.abs(dx), Math.abs(dy)) < 20 && duration < 400) {
             const now = Date.now();
             if (now - lastTapTime.current < 400) {
                 onOpenAdmin();
-                lastTapTime.current = 0;
-                setIsDetailOpen(false);
-                return;
+            } else {
+                setIsDetailOpen(true);
             }
             lastTapTime.current = now;
-            setIsDetailOpen(true);
             return;
         }
 
         // Swipe detected
         if (Math.abs(dy) > Math.abs(dx)) {
-            // Vertical Swipe -> Navigation (UP = NEXT)
             if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
             else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
         } else {
-            // Horizontal Swipe -> Vote
             if (Math.abs(dx) > SWIPE_THRESHOLD) {
-                if (dx < -SWIPE_THRESHOLD) console.log('Downvoted:', apps[activeIndexRef.current].name);
-                else console.log('Upvoted:', apps[activeIndexRef.current].name);
+                if (dx < -SWIPE_THRESHOLD) console.log('Downvoted');
+                else console.log('Upvoted');
                 if (navigator.vibrate) navigator.vibrate([30, 50]);
             }
         }
     };
 
     // ── Mouse Support (PC) ───────────────────────────────────────────
-    const isMouseDown = useRef(false);
+    const onTouchStart = (e: React.TouchEvent) => handleStart(e.touches[0].clientX, e.touches[0].clientY);
+    const onTouchMove = (e: React.TouchEvent) => handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    const onTouchEnd = () => handleEnd();
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        gestureStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
-        isMouseDown.current = true;
-        longPressTimeout.current = window.setTimeout(() => {
-            setIsMovingLogo(true);
-        }, LONG_PRESS_DELAY);
-    };
+    const onMouseDown = (e: React.MouseEvent) => handleStart(e.clientX, e.clientY);
+    const onMouseMove = (e: React.MouseEvent) => handleMove(e.clientX, e.clientY);
+    const onMouseUp = () => handleEnd();
 
     useEffect(() => {
-        const onMouseMove = (e: MouseEvent) => {
-            if (!isMouseDown.current) return;
-            const dx = e.clientX - gestureStart.current.x;
-            const dy = e.clientY - gestureStart.current.y;
-
-            if (isMovingLogo) {
-                setPos({
-                    x: Math.max(5, Math.min(95, (e.clientX / window.innerWidth) * 100)),
-                    y: Math.max(5, Math.min(95, (e.clientY / window.innerHeight) * 100))
-                });
-            } else {
-                if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-                    if (longPressTimeout.current) {
-                        clearTimeout(longPressTimeout.current);
-                        longPressTimeout.current = null;
-                    }
-                }
-                setDragOffset({ x: dx, y: dy });
-            }
-        };
-
-        const onMouseUp = () => {
-            if (!isMouseDown.current) return;
-            isMouseDown.current = false;
-            if (longPressTimeout.current) {
-                clearTimeout(longPressTimeout.current);
-                longPressTimeout.current = null;
-            }
-            if (isMovingLogo) {
-                setIsMovingLogo(false);
-                setDragOffset({ x: 0, y: 0 });
-            } else {
-                const dx = dragOffset.x;
-                const dy = dragOffset.y;
-                if (Math.abs(dy) > Math.abs(dx)) {
-                    if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
-                    else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
-                } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
-                    if (dx < -SWIPE_THRESHOLD) console.log('Downvoted:', apps[activeIndexRef.current].name);
-                    else console.log('Upvoted:', apps[activeIndexRef.current].name);
-                    if (navigator.vibrate) navigator.vibrate([30, 50]);
-                }
-                setDragOffset({ x: 0, y: 0 });
-            }
-        };
-
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', onMouseUp);
+        window.addEventListener('mousemove', onMouseMove as any);
+        window.addEventListener('mouseup', onMouseUp as any);
         return () => {
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onMouseUp);
+            window.removeEventListener('mousemove', onMouseMove as any);
+            window.removeEventListener('mouseup', onMouseUp as any);
         };
-    }, [isMovingLogo, dragOffset, goTo, apps]);
+    }, [isInteracting, dragOffset]);
 
     if (total === 0) {
         return (
@@ -285,7 +231,14 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
     if (total > 0 && !currentApp) return null;
 
     return (
-        <div className="flow-root" ref={containerRef}>
+        <div
+            className="flow-root"
+            ref={containerRef}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onMouseDown={onMouseDown}
+        >
             {/* Slide stack */}
             <div
                 className="slide-stack"
@@ -297,7 +250,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
                 {apps.map((app, index) => (
                     <div key={app.id} className="slide">
                         {app.url === 'internal:home' ? (
-                            <HomeView onOpenMyPage={onOpenMyPage} />
+                            <HomeView />
                         ) : Math.abs(index - activeIndex) <= 1 ? (
                             <iframe
                                 ref={el => { iframeRefs.current[app.id] = el; }}
@@ -314,17 +267,13 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
                 ))}
             </div>
 
-            {/* Pirasa Controller (Floating Pie Menu) */}
+            {/* Ghost Iris (Appears only while interacting) */}
             <div
-                ref={logoRef}
-                className={`pirasa - controller ${isMovingLogo ? 'moving' : ''} `}
+                className={`ghost-iris ${isInteracting ? 'visible' : ''}`}
                 style={{
-                    left: `${pos.x}% `,
-                    top: `${pos.y}% `,
-                    transform: `translate(-50 %, -50 %) translate(${dragOffset.x}px, ${dragOffset.y}px)`,
+                    left: `${interactionPos.x}%`,
+                    top: `${interactionPos.y}%`,
                     filter: (() => {
-                        if (isMovingLogo) return 'hue-rotate(90deg) brightness(1.2)';
-
                         const dx = dragOffset.x;
                         const dy = dragOffset.y;
                         const adx = Math.abs(dx);
@@ -339,11 +288,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
                         return 'none';
                     })()
                 }}
-                onTouchStart={handleLogoTouchStart}
-                onTouchMove={handleLogoTouchMove}
-                onTouchEnd={handleLogoTouchEnd}
-                onMouseDown={handleMouseDown}
-                onDoubleClick={onOpenAdmin}
             >
                 <div className="controller-ring">
                     <div className="controller-iris" />
@@ -365,7 +309,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
             {/* Progress dots */}
             <div className="progress-dots">
                 {apps.map((_, i) => (
-                    <div key={i} className={`dot ${i === activeIndex ? 'dot-active' : ''} `} />
+                    <div key={i} className={`dot ${i === activeIndex ? 'dot-active' : ''}`} />
                 ))}
             </div>
 
@@ -410,12 +354,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSa
                                 window.open(currentApp.url, '_blank');
                             }}>
                                 サイトを開く
-                            </button>
-                            <button
-                                className={`ds-btn-save ${isSaved(currentApp.id) ? 'active' : ''}`}
-                                onClick={() => toggleSave(currentApp.id)}
-                            >
-                                {isSaved(currentApp.id) ? '❤️ 保存済み' : '🖤 保存する'}
                             </button>
                         </div>
 
