@@ -58,6 +58,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isListOpen, setIsListOpen] = useState(false);
+    const [isMyPageOpen, setIsMyPageOpen] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const [toast, setToast] = useState<string | null>(null);
 
@@ -185,8 +186,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             if (dy < -20) goTo(activeIndexRef.current + 1);
             else if (dy > 20) goTo(activeIndexRef.current - 1);
         } else {
-            // Horizontal: List toggle
-            if (dx > 40) setIsListOpen(true);
+            // Horizontal: List & MyPage
+            if (dx < -40) setIsListOpen(true);
+            else if (dx > 40) setIsMyPageOpen(true);
         }
     };
 
@@ -311,10 +313,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     <span className="tab-icon">ℹ️</span>
                     <span className="tab-label">情報</span>
                 </button>
-                <button className="tab-item vote-down" onClick={() => handleVote('down')}>
-                    <span className="tab-icon">👎</span>
-                    <span className="tab-label">だめね</span>
-                </button>
                 <button className="tab-item vote-comment" onClick={() => showToast('コメント機能は開発中です')}>
                     <span className="tab-icon">💬</span>
                     <span className="tab-label">コメント</span>
@@ -327,18 +325,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
 
             {/* Toast Feedback */}
             {toast && <div className="pirasa-toast">{toast}</div>}
-
-            {/* Gesture feedback hints */}
-            {Math.abs(dragOffset.y) > SWIPE_THRESHOLD && (
-                <div className="gesture-hint-v">
-                    {dragOffset.y < 0 ? 'NEXT' : 'PREV'}
-                </div>
-            )}
-            {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && (
-                <div className="gesture-hint-h">
-                    {dragOffset.x < 0 ? 'DOWNVOTE' : 'UPVOTE'}
-                </div>
-            )}
 
             {/* Progress dots */}
             <div className="progress-dots">
@@ -425,6 +411,40 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* My Page Overlay */}
+            {isMyPageOpen && (
+                <div className="list-overlay" onClick={() => setIsMyPageOpen(false)}>
+                    <div className="list-container" onClick={e => e.stopPropagation()}>
+                        <div className="list-header">
+                            <h2>マイページ</h2>
+                            <button className="list-close" onClick={() => setIsMyPageOpen(false)}>×</button>
+                        </div>
+                        <div className="mypage-content">
+                            <div className="mypage-profile">
+                                <div className="profile-avatar">👤</div>
+                                <div className="profile-info">
+                                    <h3>Pirasa User</h3>
+                                    <p>探索したサイト: 42</p>
+                                </div>
+                            </div>
+                            <div className="mypage-stats">
+                                <div className="stat-card">
+                                    <label>いいね</label>
+                                    <span>28</span>
+                                </div>
+                                <div className="stat-card">
+                                    <label>保存</label>
+                                    <span>15</span>
+                                </div>
+                            </div>
+                            <button className="ds-btn-primary" style={{ width: '100%', marginTop: '20px' }} onClick={() => onOpenAdmin()}>
+                                管理画面を開く
+                            </button>
                         </div>
                     </div>
                 </div>
