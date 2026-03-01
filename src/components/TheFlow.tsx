@@ -5,36 +5,38 @@ import './TheFlow.css';
 const HomeView = () => (
     <div className="home-view">
         <div className="home-content">
-            <h1 className="home-title">Pirasa</h1>
-            <p className="home-subtitle">Next Generation Zap-App Store</p>
+            <div className="home-band">
+                <h1 className="home-title">Pirasa</h1>
+                <p className="home-subtitle">Sophisticated Curation Hub</p>
+            </div>
 
             <div className="tutorial-grid">
                 <div className="tutorial-item vertical">
-                    <div className="gesture-icon">↑</div>
+                    <div className="gesture-icon">✦</div>
                     <div className="gesture-text">
-                        <strong>NEXT</strong>
-                        <span>ロゴを上にスライド</span>
-                    </div>
-                </div>
-                <div className="tutorial-item vertical">
-                    <div className="gesture-icon">↓</div>
-                    <div className="gesture-text">
-                        <strong>PREV</strong>
-                        <span>ロゴを下にスライド</span>
+                        <strong>NAVIGATE</strong>
+                        <span>「帯」を上下にスライド</span>
                     </div>
                 </div>
                 <div className="tutorial-item horizontal">
-                    <div className="gesture-icon">← / →</div>
+                    <div className="gesture-icon">←</div>
                     <div className="gesture-text">
-                        <strong>評価</strong>
-                        <span>左で嫌い、右で好き</span>
+                        <strong>SITE LIST</strong>
+                        <span>全サイトをグリッド表示</span>
+                    </div>
+                </div>
+                <div className="tutorial-item horizontal">
+                    <div className="gesture-icon">→</div>
+                    <div className="gesture-text">
+                        <strong>MY PAGE</strong>
+                        <span>保存履歴や設定を確認</span>
                     </div>
                 </div>
                 <div className="tutorial-item action">
-                    <div className="gesture-icon">⚙️</div>
+                    <div className="gesture-icon">✥</div>
                     <div className="gesture-text">
-                        <strong>設定</strong>
-                        <span>サイト詳細から設定へ</span>
+                        <strong>ACTION HUB</strong>
+                        <span>最下部から直接アクション</span>
                     </div>
                 </div>
             </div>
@@ -270,32 +272,34 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 </div>
             </div>
 
-            {/* Ghost Iris (Interaction Feedback) */}
-            <div
-                className={`ghost-iris ${isInteracting ? 'visible' : ''}`}
-                style={{
-                    left: `${interactionPos.x}%`,
-                    top: `${interactionPos.y}%`,
-                    filter: (() => {
-                        const dx = dragOffset.x;
-                        const dy = dragOffset.y;
-                        const adx = Math.abs(dx);
-                        const ady = Math.abs(dy);
+            {/* Ghost Iris (Interaction Feedback) - Hidden on Home */}
+            {activeIndex !== 0 && (
+                <div
+                    className={`ghost-iris ${isInteracting ? 'visible' : ''}`}
+                    style={{
+                        left: `${interactionPos.x}%`,
+                        top: `${interactionPos.y}%`,
+                        filter: (() => {
+                            const dx = dragOffset.x;
+                            const dy = dragOffset.y;
+                            const adx = Math.abs(dx);
+                            const ady = Math.abs(dy);
 
-                        if (ady > adx && ady > SWIPE_THRESHOLD) {
-                            return dy < 0 ? 'hue-rotate(45deg) brightness(1.2) drop-shadow(0 0 15px rgba(212,175,55,0.6))' : 'brightness(0.8) drop-shadow(0 0 15px rgba(255,255,255,0.4))';
-                        }
-                        if (adx > ady && adx > SWIPE_THRESHOLD) {
-                            return dx < 0 ? 'grayscale(1) brightness(0.7)' : 'hue-rotate(10deg) brightness(1.5) drop-shadow(0 0 15px rgba(212,175,55,0.8))';
-                        }
-                        return 'none';
-                    })()
-                }}
-            >
-                <div className="controller-ring">
-                    <div className="controller-iris" />
+                            if (ady > adx && ady > SWIPE_THRESHOLD) {
+                                return dy < 0 ? 'hue-rotate(45deg) brightness(1.2) drop-shadow(0 0 15px rgba(212,175,55,0.6))' : 'brightness(0.8) drop-shadow(0 0 15px rgba(255,255,255,0.4))';
+                            }
+                            if (adx > ady && adx > SWIPE_THRESHOLD) {
+                                return dx < 0 ? 'grayscale(1) brightness(0.7)' : 'hue-rotate(10deg) brightness(1.5) drop-shadow(0 0 15px rgba(212,175,55,0.8))';
+                            }
+                            return 'none';
+                        })()
+                    }}
+                >
+                    <div className="controller-ring">
+                        <div className="controller-iris" />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Action-Oriented Tab Bar */}
             <nav
