@@ -256,7 +256,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                             <h1>サイト一覧</h1>
                         </div>
                         <div className="app-grid">
-                            {apps.filter(a => a.url !== 'internal:home').map((app, idx) => {
+                            {apps.filter(a => a.url !== 'internal:home').map((app) => {
                                 // Find actual index in original apps array
                                 const realIdx = apps.findIndex(a => a.id === app.id);
                                 return (
