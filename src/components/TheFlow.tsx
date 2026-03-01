@@ -73,7 +73,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const [activeTab, setActiveTab] = useState<'home' | 'list' | 'pie' | 'mypage'>('home');
+    const [toast, setToast] = useState<string | null>(null);
 
     // Interaction State (Ghost UI)
     const [isInteracting, setIsInteracting] = useState(false);
@@ -113,10 +113,18 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
 
     // ── Gesture Helpers (Ghost UI: Margin-Only) ───────────────────────
 
-    const handleStart = (clientX: number, clientY: number) => {
-        // Only allow interaction if we are in the Pie tab
-        if (activeTab !== 'pie') return;
+    const showToast = (msg: string) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 2000);
+    };
 
+    const handleVote = (type: 'up' | 'down') => {
+        console.log(`${type === 'up' ? 'Upvoted' : 'Downvoted'}:`, apps[activeIndexRef.current].name);
+        if (navigator.vibrate) navigator.vibrate([30, 50]);
+        // Visual feedback for voting can be added here
+    };
+
+    const handleStart = (clientX: number, clientY: number) => {
         // Only allow interaction from top/bottom 80px
         const margin = 80;
         const isMargin = clientY < margin || clientY > window.innerHeight - margin;
@@ -194,9 +202,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
         } else {
             if (Math.abs(dx) > SWIPE_THRESHOLD) {
-                if (dx < -SWIPE_THRESHOLD) console.log('Downvoted');
-                else console.log('Upvoted');
-                if (navigator.vibrate) navigator.vibrate([30, 50]);
+                handleVote(dx < 0 ? 'down' : 'up');
             }
         }
     };
@@ -235,173 +241,95 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
 
     return (
         <div
-            className={`flow-root tab-${activeTab}`}
+            className="flow-root"
             ref={containerRef}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
             onMouseDown={onMouseDown}
         >
-            {/* View Containers */}
+            {/* Main Content: Slide Stack */}
             <div className="view-container">
-                {activeTab === 'home' && (
-                    <div className="tab-view home-view-tab">
-                        <HomeView />
-                    </div>
-                )}
-
-                {activeTab === 'list' && (
-                    <div className="tab-view list-view-tab">
-                        <div className="list-header">
-                            <h1>サイト一覧</h1>
-                        </div>
-                        <div className="app-grid">
-                            {apps.filter(a => a.url !== 'internal:home').map((app) => {
-                                // Find actual index in original apps array
-                                const realIdx = apps.findIndex(a => a.id === app.id);
-                                return (
-                                    <div
-                                        key={app.id}
-                                        className="app-card"
-                                        onClick={() => {
-                                            setActiveIndex(realIdx);
-                                            setActiveTab('pie');
-                                        }}
-                                    >
-                                        <div className="app-card-icon">{app.name[0]}</div>
-                                        <div className="app-card-info">
-                                            <h3>{app.name}</h3>
-                                            <p>{app.tagline}</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'pie' && (
-                    <div className="tab-view pie-view-tab">
-                        {/* Slide stack */}
-                        <div
-                            className="slide-stack"
-                            style={{
-                                transform: `translateY(-${activeIndex * 100}vh)`,
-                                transition: isAnimating.current ? 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
-                            }}
-                        >
-                            {apps.map((app, index) => (
-                                <div key={app.id} className="slide">
-                                    {app.url === 'internal:home' ? (
-                                        <div className="internal-home-redirect">
-                                            <p>Homeタブで詳細を確認してください</p>
-                                            <button onClick={() => setActiveTab('home')}>ホームへ</button>
-                                        </div>
-                                    ) : Math.abs(index - activeIndex) <= 1 ? (
-                                        <iframe
-                                            ref={el => { iframeRefs.current[app.id] = el; }}
-                                            src={app.url}
-                                            title={app.name}
-                                            className="app-iframe"
-                                            loading={index === activeIndex ? 'eager' : 'lazy'}
-                                            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                        />
-                                    ) : (
-                                        <div className="slide-placeholder" />
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'mypage' && (
-                    <div className="tab-view mypage-view-tab">
-                        <div className="mypage-content">
-                            <div className="profile-header">
-                                <div className="profile-avatar">P</div>
-                                <h2>マイページ</h2>
-                            </div>
-                            <div className="mypage-stats">
-                                <div className="stat-item">
-                                    <label>評価したサイト</label>
-                                    <span>24</span>
-                                </div>
-                                <div className="stat-item">
-                                    <label>ランク</label>
-                                    <span>ビギナー</span>
-                                </div>
-                            </div>
-                            <div className="mypage-menu">
-                                <button className="menu-item" onClick={onOpenAdmin}>管理者設定 (詳細設定)</button>
-                                <button className="menu-item">ブックマーク</button>
-                                <button className="menu-item">ログアウト</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Ghost Iris (Appears only while interacting in Pie tab) */}
-            {activeTab === 'pie' && (
-                <div
-                    className={`ghost-iris ${isInteracting ? 'visible' : ''}`}
+                <div className="slide-stack"
                     style={{
-                        left: `${interactionPos.x}%`,
-                        top: `${interactionPos.y}%`,
-                        filter: (() => {
-                            const dx = dragOffset.x;
-                            const dy = dragOffset.y;
-                            const adx = Math.abs(dx);
-                            const ady = Math.abs(dy);
-
-                            if (ady > adx && ady > SWIPE_THRESHOLD) {
-                                return dy < 0 ? 'hue-rotate(120deg) drop-shadow(0 0 15px #00ff00)' : 'hue-rotate(220deg) drop-shadow(0 0 15px #0000ff)';
-                            }
-                            if (adx > ady && adx > SWIPE_THRESHOLD) {
-                                return dx < 0 ? 'hue-rotate(45deg) drop-shadow(0 0 15px #ffff00)' : 'hue-rotate(280deg) drop-shadow(0 0 15px #ff00ff)';
-                            }
-                            return 'none';
-                        })()
+                        transform: `translateY(-${activeIndex * 100}vh)`,
+                        transition: isAnimating.current ? 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
                     }}
                 >
-                    <div className="controller-ring">
-                        <div className="controller-iris" />
-                    </div>
+                    {apps.map((app, index) => (
+                        <div key={app.id} className="slide">
+                            {app.url === 'internal:home' ? (
+                                <HomeView />
+                            ) : Math.abs(index - activeIndex) <= 1 ? (
+                                <iframe
+                                    ref={el => { iframeRefs.current[app.id] = el; }}
+                                    src={app.url}
+                                    title={app.name}
+                                    className="app-iframe"
+                                    loading={index === activeIndex ? 'eager' : 'lazy'}
+                                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                />
+                            ) : (
+                                <div className="slide-placeholder" />
+                            )}
+                        </div>
+                    ))}
                 </div>
-            )}
+            </div>
 
-            {/* Bottom Tab Bar */}
-            <nav className="bottom-tab-bar">
-                <button
-                    className={`tab-item ${activeTab === 'home' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('home')}
-                >
-                    <span className="tab-icon">🏠</span>
-                    <span className="tab-label">ホーム</span>
+            {/* Ghost Iris (Interaction Feedback) */}
+            <div
+                className={`ghost-iris ${isInteracting ? 'visible' : ''}`}
+                style={{
+                    left: `${interactionPos.x}%`,
+                    top: `${interactionPos.y}%`,
+                    filter: (() => {
+                        const dx = dragOffset.x;
+                        const dy = dragOffset.y;
+                        const adx = Math.abs(dx);
+                        const ady = Math.abs(dy);
+
+                        if (ady > adx && ady > SWIPE_THRESHOLD) {
+                            return dy < 0 ? 'hue-rotate(120deg) drop-shadow(0 0 15px #00ff00)' : 'hue-rotate(220deg) drop-shadow(0 0 15px #0000ff)';
+                        }
+                        if (adx > ady && adx > SWIPE_THRESHOLD) {
+                            return dx < 0 ? 'hue-rotate(45deg) drop-shadow(0 0 15px #ffff00)' : 'hue-rotate(280deg) drop-shadow(0 0 15px #ff00ff)';
+                        }
+                        return 'none';
+                    })()
+                }}
+            >
+                <div className="controller-ring">
+                    <div className="controller-iris" />
+                </div>
+            </div>
+
+            {/* Action-Oriented Tab Bar */}
+            <nav className="bottom-tab-bar actions">
+                <button className="tab-item vote-up" onClick={() => handleVote('up')}>
+                    <span className="tab-icon">👍</span>
+                    <span className="tab-label">いいね</span>
                 </button>
-                <button
-                    className={`tab-item ${activeTab === 'list' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('list')}
-                >
-                    <span className="tab-icon">☰</span>
-                    <span className="tab-label">一覧</span>
+                <button className="tab-item vote-info" onClick={() => setIsDetailOpen(true)}>
+                    <span className="tab-icon">ℹ️</span>
+                    <span className="tab-label">情報</span>
                 </button>
-                <button
-                    className={`tab-item ${activeTab === 'pie' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('pie')}
-                >
-                    <span className="tab-icon">🎡</span>
-                    <span className="tab-label">パイメニュー</span>
+                <button className="tab-item vote-down" onClick={() => handleVote('down')}>
+                    <span className="tab-icon">👎</span>
+                    <span className="tab-label">だめね</span>
                 </button>
-                <button
-                    className={`tab-item ${activeTab === 'mypage' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('mypage')}
-                >
-                    <span className="tab-icon">👤</span>
-                    <span className="tab-label">マイページ</span>
+                <button className="tab-item vote-comment" onClick={() => showToast('コメント機能は開発中です')}>
+                    <span className="tab-icon">💬</span>
+                    <span className="tab-label">コメント</span>
+                </button>
+                <button className="tab-item vote-save" onClick={() => showToast('保存しました')}>
+                    <span className="tab-icon">🔖</span>
+                    <span className="tab-label">保存</span>
                 </button>
             </nav>
+
+            {/* Toast Feedback */}
+            {toast && <div className="pirasa-toast">{toast}</div>}
 
             {/* Gesture feedback hints */}
             {Math.abs(dragOffset.y) > SWIPE_THRESHOLD && (

@@ -17,41 +17,28 @@
     z-index: 1;
 }
 
-/* ─── Tab Navigation Layout ──────────────────────────────── */
+/* ─── Action-Oriented Tab Bar (Action Hub) ────────────────── */
 .view-container {
     width: 100%;
-    height: calc(100vh - 70px);
-    /* Subtract tab bar height */
+    height: 100vh;
     position: relative;
     overflow: hidden;
 }
 
-.tab-view {
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.tab-pie .view-container {
-    height: 100vh;
-    /* Pie mode stays full screen */
-}
-
-/* ─── Bottom Tab Bar ─────────────────────────────────────── */
-.bottom-tab-bar {
+/* ─── Action-Oriented Tab Bar (Action Hub) ────────────────── */
+.bottom-tab-bar.actions {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 70px;
-    background: rgba(15, 15, 15, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    height: 75px;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     z-index: 20000;
     padding-bottom: env(safe-area-inset-bottom);
 }
@@ -63,195 +50,88 @@
     justify-content: center;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     flex: 1;
     gap: 4px;
+    height: 100%;
 }
 
-.tab-item.active {
-    color: #fff;
-    transform: translateY(-2px);
+.tab-item:active {
+    transform: scale(0.9);
+    filter: brightness(1.5);
+}
+
+.tab-item.vote-up:active {
+    color: #ff00ff;
+}
+
+.tab-item.vote-down:active {
+    color: #ffae00;
+}
+
+.tab-item.vote-info:active {
+    color: #00ffff;
+}
+
+.tab-item.vote-comment:active {
+    color: #00ff88;
+}
+
+.tab-item.vote-save:active {
+    color: #ffea00;
 }
 
 .tab-icon {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
 }
 
 .tab-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
 
-/* ─── List View Styles ───────────────────────────────────── */
-.list-view-tab {
-    padding: 20px;
-    background: #000;
-}
-
-.list-header h1 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.app-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding-bottom: 40px;
-}
-
-.app-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.app-card:active {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(0.98);
-}
-
-.app-card-icon {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, #333 0%, #111 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #fff;
-}
-
-.app-card-info h3 {
-    font-size: 1rem;
-    margin: 0;
-}
-
-.app-card-info p {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin: 4px 0 0 0;
-}
-
-/* ─── MyPage Styles ──────────────────────────────────────── */
-.mypage-view-tab {
-    padding: 40px 20px;
-    background: #000;
-}
-
-.profile-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 40px;
-}
-
-.profile-avatar {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, #ff0080 0%, #7928ca 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    font-weight: bold;
-    color: #fff;
-    box-shadow: 0 10px 30px rgba(121, 40, 202, 0.3);
-}
-
-.mypage-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 30px;
-}
-
-.stat-item {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    padding: 20px;
-    text-align: center;
-}
-
-.stat-item label {
-    display: block;
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.4);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-.stat-item span {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #fff;
-}
-
-.mypage-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.menu-item {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    color: #fff;
-    padding: 18px;
-    border-radius: 16px;
-    text-align: left;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.menu-item:active {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.menu-item:first-child {
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Home Redirect in Pie Mode */
-.internal-home-redirect {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    gap: 20px;
-    text-align: center;
-    padding: 40px;
-}
-
-.internal-home-redirect button {
-    background: #fff;
+/* ─── Toast Feedback ─────────────────────────────────────── */
+.pirasa-toast {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
     color: #000;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 30px;
-    font-weight: bold;
-    cursor: pointer;
+    padding: 12px 24px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    z-index: 30000;
+    animation: toast-in-out 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    white-space: nowrap;
+}
+
+@keyframes toast-in-out {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+
+    15% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    85% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
 }
 
 .slide {
