@@ -26,29 +26,15 @@ const HomeView = () => (
                 <div className="tutorial-item horizontal">
                     <div className="gesture-icon">← / →</div>
                     <div className="gesture-text">
-                        <strong>DOWN / UPVOTE</strong>
-                        <span>左で低評価、右で高評価</span>
+                        <strong>評価</strong>
+                        <span>左で嫌い、右で好き</span>
                     </div>
                 </div>
                 <div className="tutorial-item action">
-                    <div className="gesture-icon">●</div>
+                    <div className="gesture-icon">⚙️</div>
                     <div className="gesture-text">
-                        <strong>DETAILS</strong>
-                        <span>タップして詳細（再読込・訪問）</span>
-                    </div>
-                </div>
-                <div className="tutorial-item action">
-                    <div className="gesture-icon">●+</div>
-                    <div className="gesture-text">
-                        <strong>MOVE</strong>
-                        <span>ロゴを長押しで移動</span>
-                    </div>
-                </div>
-                <div className="tutorial-item action">
-                    <div className="gesture-icon">●●</div>
-                    <div className="gesture-text">
-                        <strong>SETTINGS</strong>
-                        <span>ダブルクリックで設定</span>
+                        <strong>設定</strong>
+                        <span>サイト詳細から設定へ</span>
                     </div>
                 </div>
             </div>
@@ -67,7 +53,6 @@ interface Props {
 }
 
 const SWIPE_THRESHOLD = 40;
-const LONG_PRESS_DELAY = 500;
 
 export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -78,13 +63,11 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     // Interaction State (Ghost UI)
     const [isInteracting, setIsInteracting] = useState(false);
     const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
-    const [isLongPressing, setIsLongPressing] = useState(false);
 
     // Iframe Refs to handle navigation
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
 
     const isAnimating = useRef(false);
-    const lastTapTime = useRef(0);
     const activeIndexRef = useRef(activeIndex);
     activeIndexRef.current = activeIndex;
 
@@ -92,7 +75,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
 
     // Gesture tracking
     const gestureStart = useRef({ x: 0, y: 0, time: 0 });
-    const longPressTimeout = useRef<number | null>(null);
 
     const total = apps.length;
     const totalRef = useRef(total);
@@ -137,11 +119,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             x: (clientX / window.innerWidth) * 100,
             y: (clientY / window.innerHeight) * 100
         });
-
-        longPressTimeout.current = window.setTimeout(() => {
-            setIsLongPressing(true);
-            if (navigator.vibrate) navigator.vibrate(50);
-        }, LONG_PRESS_DELAY);
     };
 
     const handleMove = (clientX: number, clientY: number) => {
@@ -155,17 +132,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             y: (clientY / window.innerHeight) * 100
         });
 
-        if (isLongPressing) {
-            // In Ghost UI, "long pressing" just updates the ghost pos
-        } else {
-            if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-                if (longPressTimeout.current) {
-                    clearTimeout(longPressTimeout.current);
-                    longPressTimeout.current = null;
-                }
-                setDragOffset({ x: dx, y: dy });
-            }
-        }
+        setDragOffset({ x: dx, y: dy });
     };
 
     const handleEnd = () => {
@@ -173,28 +140,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
 
         const dx = dragOffset.x;
         const dy = dragOffset.y;
-        const duration = Date.now() - gestureStart.current.time;
 
-        if (longPressTimeout.current) {
-            clearTimeout(longPressTimeout.current);
-            longPressTimeout.current = null;
-        }
-
-        setIsLongPressing(false);
         setIsInteracting(false);
         setDragOffset({ x: 0, y: 0 });
-
-        // Tap detected
-        if (Math.max(Math.abs(dx), Math.abs(dy)) < 20 && duration < 400) {
-            const now = Date.now();
-            if (now - lastTapTime.current < 400) {
-                onOpenAdmin();
-            } else {
-                setIsDetailOpen(true);
-            }
-            lastTapTime.current = now;
-            return;
-        }
 
         // Swipe detected
         if (Math.abs(dy) > Math.abs(dx)) {
