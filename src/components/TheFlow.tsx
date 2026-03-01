@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { AppMeta } from '../hooks/useApps';
+import type { AppMeta } from '../hooks/useApps';
 import './TheFlow.css';
 
 const HomeView = () => (
