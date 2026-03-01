@@ -40,7 +40,7 @@ const HomeView = () => (
             </div>
 
             <div className="home-footer">
-                <p>上下の余白エリアをスワイプして操作</p>
+                <p>上下の余白、または<strong>最下部のタブ帯</strong>をスワイプして操作</p>
                 <div className="scroll-indicator">↑</div>
             </div>
         </div>
@@ -57,6 +57,7 @@ const SWIPE_THRESHOLD = 40;
 export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [isListOpen, setIsListOpen] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const [toast, setToast] = useState<string | null>(null);
 
@@ -154,6 +155,40 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             }
         }
     };
+    // ── Tab Bar Gestures ──────────────────────────────────────────
+    const tabGestureStart = useRef({ x: 0, y: 0, time: 0 });
+    const [isTabInteracting, setIsTabInteracting] = useState(false);
+    const [tabDragOffset, setTabDragOffset] = useState({ x: 0, y: 0 });
+
+    const onTabStart = (clientX: number, clientY: number) => {
+        tabGestureStart.current = { x: clientX, y: clientY, time: Date.now() };
+        setIsTabInteracting(true);
+        setTabDragOffset({ x: 0, y: 0 });
+    };
+
+    const onTabMove = (clientX: number, clientY: number) => {
+        if (!isTabInteracting) return;
+        const dx = clientX - tabGestureStart.current.x;
+        const dy = clientY - tabGestureStart.current.y;
+        setTabDragOffset({ x: dx, y: dy });
+    };
+
+    const onTabEnd = () => {
+        if (!isTabInteracting) return;
+        const dx = tabDragOffset.x;
+        const dy = tabDragOffset.y;
+        setIsTabInteracting(false);
+        setTabDragOffset({ x: 0, y: 0 });
+
+        if (Math.abs(dy) > Math.abs(dx)) {
+            // Vertical: Navigation
+            if (dy < -20) goTo(activeIndexRef.current + 1);
+            else if (dy > 20) goTo(activeIndexRef.current - 1);
+        } else {
+            // Horizontal: List toggle
+            if (dx > 40) setIsListOpen(true);
+        }
+    };
 
     // ── Mouse Support (PC) ───────────────────────────────────────────
     const onTouchStart = (e: React.TouchEvent) => handleStart(e.touches[0].clientX, e.touches[0].clientY);
@@ -165,13 +200,21 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const onMouseUp = () => handleEnd();
 
     useEffect(() => {
-        window.addEventListener('mousemove', onMouseMove as any);
-        window.addEventListener('mouseup', onMouseUp as any);
-        return () => {
-            window.removeEventListener('mousemove', onMouseMove as any);
-            window.removeEventListener('mouseup', onMouseUp as any);
+        const moveHandler = (e: MouseEvent) => {
+            onMouseMove(e as any);
+            if (isTabInteracting) onTabMove(e.clientX, e.clientY);
         };
-    }, [isInteracting, dragOffset]);
+        const upHandler = () => {
+            onMouseUp();
+            if (isTabInteracting) onTabEnd();
+        };
+        window.addEventListener('mousemove', moveHandler);
+        window.addEventListener('mouseup', upHandler);
+        return () => {
+            window.removeEventListener('mousemove', moveHandler);
+            window.removeEventListener('mouseup', upHandler);
+        };
+    }, [isInteracting, isTabInteracting, dragOffset, tabDragOffset]);
 
     if (total === 0) {
         return (
@@ -253,7 +296,17 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             </div>
 
             {/* Action-Oriented Tab Bar */}
-            <nav className="bottom-tab-bar actions">
+            <nav
+                className={`bottom-tab-bar actions ${isTabInteracting ? 'active' : ''}`}
+                onTouchStart={(e) => onTabStart(e.touches[0].clientX, e.touches[0].clientY)}
+                onTouchMove={(e) => onTabMove(e.touches[0].clientX, e.touches[0].clientY)}
+                onTouchEnd={onTabEnd}
+                onMouseDown={(e) => onTabStart(e.clientX, e.clientY)}
+                style={{
+                    transform: isTabInteracting ? `translate(${tabDragOffset.x}px, ${tabDragOffset.y}px)` : 'none',
+                    transition: isTabInteracting ? 'none' : 'transform 0.3s ease'
+                }}
+            >
                 <button className="tab-item vote-up" onClick={() => handleVote('up')}>
                     <span className="tab-icon">👍</span>
                     <span className="tab-label">いいね</span>
@@ -345,6 +398,38 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                         <button className="ds-close-light" onClick={() => setIsDetailOpen(false)}>
                             閉じる
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Site List Overlay */}
+            {isListOpen && (
+                <div className="list-overlay" onClick={() => setIsListOpen(false)}>
+                    <div className="list-container" onClick={e => e.stopPropagation()}>
+                        <div className="list-header">
+                            <h2>サイト一覧</h2>
+                            <button className="list-close" onClick={() => setIsListOpen(false)}>×</button>
+                        </div>
+                        <div className="app-grid">
+                            {apps.map((app, index) => (
+                                <div
+                                    key={app.id}
+                                    className={`app-card ${index === activeIndex ? 'active' : ''}`}
+                                    onClick={() => {
+                                        goTo(index);
+                                        setIsListOpen(false);
+                                    }}
+                                >
+                                    <div className="app-card-icon">
+                                        {app.url === 'internal:home' ? '🏠' : app.name[0]}
+                                    </div>
+                                    <div className="app-card-info">
+                                        <h3>{app.name}</h3>
+                                        <p>{app.tagline}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
