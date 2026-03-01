@@ -23,6 +23,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
 
     const isAnimating = useRef(false);
+    const lastTapTime = useRef(0);
     const activeIndexRef = useRef(activeIndex);
     activeIndexRef.current = activeIndex;
 
@@ -105,6 +106,14 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
 
         // Tap detected
         if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && duration < 300) {
+            const now = Date.now();
+            if (now - lastTapTime.current < 400) {
+                onOpenAdmin();
+                lastTapTime.current = 0;
+                setIsDetailOpen(false); // Close detail if it was opened by the first tap
+                return;
+            }
+            lastTapTime.current = now;
             setIsDetailOpen(true);
             return;
         }
@@ -270,6 +279,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 onTouchMove={handleLogoTouchMove}
                 onTouchEnd={handleLogoTouchEnd}
                 onMouseDown={handleMouseDown}
+                onDoubleClick={onOpenAdmin}
             >
                 <div className="controller-ring">
                     <img src="/logo.png" alt="pirasa" className="controller-logo" />
