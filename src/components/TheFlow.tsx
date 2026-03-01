@@ -283,10 +283,10 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                         const ady = Math.abs(dy);
 
                         if (ady > adx && ady > SWIPE_THRESHOLD) {
-                            return dy < 0 ? 'hue-rotate(120deg) drop-shadow(0 0 15px #00ff00)' : 'hue-rotate(220deg) drop-shadow(0 0 15px #0000ff)';
+                            return dy < 0 ? 'hue-rotate(45deg) brightness(1.2) drop-shadow(0 0 15px rgba(212,175,55,0.6))' : 'brightness(0.8) drop-shadow(0 0 15px rgba(255,255,255,0.4))';
                         }
                         if (adx > ady && adx > SWIPE_THRESHOLD) {
-                            return dx < 0 ? 'hue-rotate(45deg) drop-shadow(0 0 15px #ffff00)' : 'hue-rotate(280deg) drop-shadow(0 0 15px #ff00ff)';
+                            return dx < 0 ? 'grayscale(1) brightness(0.7)' : 'hue-rotate(10deg) brightness(1.5) drop-shadow(0 0 15px rgba(212,175,55,0.8))';
                         }
                         return 'none';
                     })()
@@ -306,24 +306,24 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 onMouseDown={(e) => onTabStart(e.clientX, e.clientY)}
             >
                 <button className="tab-item vote-info" onClick={() => setIsDetailOpen(true)}>
-                    <span className="tab-icon">✨</span>
-                    <span className="tab-label">情報</span>
+                    <span className="tab-icon">✦</span>
+                    <span className="tab-label">Information</span>
                 </button>
                 <button className="tab-item vote-up" onClick={() => handleVote('up')}>
-                    <span className="tab-icon">💖</span>
-                    <span className="tab-label">良いね</span>
+                    <span className="tab-icon">♥</span>
+                    <span className="tab-label">Like</span>
                 </button>
-                <button className="tab-item vote-comment" onClick={() => showToast('コメント機能は開発中です 🧼')}>
-                    <span className="tab-icon">🧼</span>
-                    <span className="tab-label">コメント</span>
+                <button className="tab-item vote-comment" onClick={() => showToast('Feature Coming Soon ✒')}>
+                    <span className="tab-icon">✒</span>
+                    <span className="tab-label">Comment</span>
                 </button>
                 <button className="tab-item vote-visit" onClick={() => window.open(currentApp.url, '_blank')}>
-                    <span className="tab-icon">🚀</span>
-                    <span className="tab-label">訪問</span>
+                    <span className="tab-icon">↗</span>
+                    <span className="tab-label">Visit</span>
                 </button>
-                <button className="tab-item vote-save" onClick={() => showToast('保存しました 🎁')}>
-                    <span className="tab-icon">🎁</span>
-                    <span className="tab-label">保存</span>
+                <button className="tab-item vote-save" onClick={() => showToast('Saved to Library ✥')}>
+                    <span className="tab-icon">✥</span>
+                    <span className="tab-label">Save</span>
                 </button>
             </nav>
 
