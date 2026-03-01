@@ -121,27 +121,12 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     // Left Swipe -> Full Page Reload
                     window.location.reload();
                 } else {
-                    // Right Swipe -> Future expansion
-                    handleHistory('forward');
+                    // Right Swipe -> Visit Page (Open in new tab)
+                    const app = apps[activeIndexRef.current];
+                    window.open(app.url, '_blank');
+                    if (navigator.vibrate) navigator.vibrate(50);
                 }
             }
-        }
-    };
-
-    const handleHistory = (direction: 'back' | 'forward') => {
-        const app = apps[activeIndexRef.current];
-        const iframe = iframeRefs.current[app.id];
-        if (!iframe) return;
-
-        try {
-            // Note: This will likely fail for cross-origin sites due to security restrictions
-            if (direction === 'back') iframe.contentWindow?.history.back();
-            else iframe.contentWindow?.history.forward();
-
-            // Visual feedback vibration
-            if (navigator.vibrate) navigator.vibrate(20);
-        } catch (err) {
-            console.warn("Cross-origin history access blocked:", err);
         }
     };
 
@@ -196,7 +181,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
                 } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
                     if (dx < -SWIPE_THRESHOLD) window.location.reload();
-                    else handleHistory('forward');
+                    else window.open(apps[activeIndexRef.current].url, '_blank');
                 }
                 setDragOffset({ x: 0, y: 0 });
             }
@@ -292,7 +277,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             )}
             {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && (
                 <div className="gesture-hint-h">
-                    {dragOffset.x < 0 ? 'RELOAD' : 'FORWARD'}
+                    {dragOffset.x < 0 ? 'RELOAD' : 'VISIT'}
                 </div>
             )}
 
