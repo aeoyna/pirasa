@@ -42,7 +42,7 @@ const HomeView = () => (
             </div>
 
             <div className="home-footer">
-                <p>上下の余白、または<strong>最下部のタブ帯</strong>をスワイプして操作</p>
+                <p><strong>最下部のタブ帯（帯）</strong>をスワイプして操作</p>
                 <div className="scroll-indicator">↑</div>
             </div>
         </div>
@@ -61,12 +61,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isListOpen, setIsListOpen] = useState(false);
     const [isMyPageOpen, setIsMyPageOpen] = useState(false);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const [toast, setToast] = useState<string | null>(null);
-
-    // Interaction State (Ghost UI)
-    const [isInteracting, setIsInteracting] = useState(false);
-    const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
 
     // Iframe Refs to handle navigation
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
@@ -110,48 +105,10 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         // Visual feedback for voting can be added here
     };
 
-    const handleStart = (clientX: number, clientY: number) => {
-        // Allow interaction from anywhere on the screen
-        gestureStart.current = { x: clientX, y: clientY, time: Date.now() };
-        setIsInteracting(true);
-        setInteractionPos({
-            x: (clientX / window.innerWidth) * 100,
-            y: (clientY / window.innerHeight) * 100
-        });
-    };
-
-    const handleMove = (clientX: number, clientY: number) => {
-        if (!isInteracting) return;
-
-        const dx = clientX - gestureStart.current.x;
-        const dy = clientY - gestureStart.current.y;
-
-        setInteractionPos({
-            x: (clientX / window.innerWidth) * 100,
-            y: (clientY / window.innerHeight) * 100
-        });
-
-        setDragOffset({ x: dx, y: dy });
-    };
-
-    const handleEnd = () => {
-        if (!isInteracting) return;
-
-        const dx = dragOffset.x;
-        const dy = dragOffset.y;
-
-        setIsInteracting(false);
-        setDragOffset({ x: 0, y: 0 });
-
-        // Swipe detected
-        if (Math.abs(dy) > Math.abs(dx)) {
-            if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
-            else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
-        } else {
-            if (Math.abs(dx) > SWIPE_THRESHOLD) {
-                handleVote(dx < 0 ? 'down' : 'up');
-            }
-        }
+    // handleVote remains for button clicks
+    const handleVote = (type: 'up' | 'down') => {
+        console.log(`${type === 'up' ? 'Upvoted' : 'Downvoted'}:`, apps[activeIndexRef.current].name);
+        if (navigator.vibrate) navigator.vibrate([30, 50]);
     };
     // ── Tab Bar Gestures ──────────────────────────────────────────
     const tabGestureStart = useRef({ x: 0, y: 0, time: 0 });
@@ -190,21 +147,12 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     };
 
     // ── Mouse Support (PC) ───────────────────────────────────────────
-    const onTouchStart = (e: React.TouchEvent) => handleStart(e.touches[0].clientX, e.touches[0].clientY);
-    const onTouchMove = (e: React.TouchEvent) => handleMove(e.touches[0].clientX, e.touches[0].clientY);
-    const onTouchEnd = () => handleEnd();
-
-    const onMouseDown = (e: React.MouseEvent) => handleStart(e.clientX, e.clientY);
-    const onMouseMove = (e: React.MouseEvent) => handleMove(e.clientX, e.clientY);
-    const onMouseUp = () => handleEnd();
 
     useEffect(() => {
         const moveHandler = (e: MouseEvent) => {
-            onMouseMove(e as any);
             if (isTabInteracting) onTabMove(e.clientX, e.clientY);
         };
         const upHandler = () => {
-            onMouseUp();
             if (isTabInteracting) onTabEnd();
         };
         window.addEventListener('mousemove', moveHandler);
@@ -213,7 +161,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             window.removeEventListener('mousemove', moveHandler);
             window.removeEventListener('mouseup', upHandler);
         };
-    }, [isInteracting, isTabInteracting, dragOffset, tabDragOffset]);
+    }, [isTabInteracting, tabDragOffset]);
 
     if (total === 0) {
         return (
@@ -233,10 +181,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         <div
             className="flow-root"
             ref={containerRef}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-            onMouseDown={onMouseDown}
         >
             {/* Main Content: Slide Stack */}
             <div className="view-container">
@@ -267,34 +211,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 </div>
             </div>
 
-            {/* Ghost Iris (Interaction Feedback) - Hidden on Home */}
-            {activeIndex !== 0 && (
-                <div
-                    className={`ghost-iris ${isInteracting ? 'visible' : ''}`}
-                    style={{
-                        left: `${interactionPos.x}%`,
-                        top: `${interactionPos.y}%`,
-                        filter: (() => {
-                            const dx = dragOffset.x;
-                            const dy = dragOffset.y;
-                            const adx = Math.abs(dx);
-                            const ady = Math.abs(dy);
-
-                            if (ady > adx && ady > SWIPE_THRESHOLD) {
-                                return dy < 0 ? 'hue-rotate(45deg) brightness(1.2) drop-shadow(0 0 15px rgba(212,175,55,0.6))' : 'brightness(0.8) drop-shadow(0 0 15px rgba(255,255,255,0.4))';
-                            }
-                            if (adx > ady && adx > SWIPE_THRESHOLD) {
-                                return dx < 0 ? 'grayscale(1) brightness(0.7)' : 'hue-rotate(10deg) brightness(1.5) drop-shadow(0 0 15px rgba(212,175,55,0.8))';
-                            }
-                            return 'none';
-                        })()
-                    }}
-                >
-                    <div className="controller-ring">
-                        <div className="controller-iris" />
-                    </div>
-                </div>
-            )}
 
             {/* Action-Oriented Tab Bar */}
             <nav
