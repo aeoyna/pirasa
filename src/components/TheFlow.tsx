@@ -257,7 +257,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     left: `${pos.x}%`,
                     top: `${pos.y}%`,
                     transform: `translate(-50%, -50%) translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-                    filter: `hue-rotate(${activeIndex * 65}deg) drop-shadow(0 0 10px var(--red-glow))`
+                    filter: (Math.abs(dragOffset.x) > SWIPE_THRESHOLD || Math.abs(dragOffset.y) > SWIPE_THRESHOLD)
+                        ? `hue-rotate(180deg) drop-shadow(0 0 15px var(--red-glow))`
+                        : (isMovingLogo ? 'hue-rotate(90deg) brightness(1.2)' : 'none')
                 }}
                 onTouchStart={handleLogoTouchStart}
                 onTouchMove={handleLogoTouchMove}
