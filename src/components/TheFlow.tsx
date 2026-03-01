@@ -1,6 +1,51 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { type AppMeta } from '../hooks/useApps';
+import { AppMeta } from '../hooks/useApps';
 import './TheFlow.css';
+
+const HomeView = () => (
+    <div className="home-view">
+        <div className="home-content">
+            <h1 className="home-title">Pirasa</h1>
+            <p className="home-subtitle">Next Generation Zap-App Store</p>
+
+            <div className="tutorial-grid">
+                <div className="tutorial-item vertical">
+                    <div className="gesture-icon">↓</div>
+                    <div className="gesture-text">
+                        <strong>NEXT</strong>
+                        <span>ロゴを下にスライド</span>
+                    </div>
+                </div>
+                <div className="tutorial-item vertical">
+                    <div className="gesture-icon">↑</div>
+                    <div className="gesture-text">
+                        <strong>PREV</strong>
+                        <span>ロゴを上にスライド</span>
+                    </div>
+                </div>
+                <div className="tutorial-item horizontal">
+                    <div className="gesture-icon">← / →</div>
+                    <div className="gesture-text">
+                        <strong>RELOAD / VISIT</strong>
+                        <span>左で再読込、右で訪問</span>
+                    </div>
+                </div>
+                <div className="tutorial-item tap">
+                    <div className="gesture-icon">●●</div>
+                    <div className="gesture-text">
+                        <strong>SETTINGS</strong>
+                        <span>ロゴをダブルクリック</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="home-footer">
+                <p>Start by swiping down the logo</p>
+                <div className="scroll-indicator">↓</div>
+            </div>
+        </div>
+    </div>
+);
 
 interface Props {
     apps: AppMeta[];
@@ -56,7 +101,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         const touch = e.touches[0];
         gestureStart.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
 
-        // Long press for dragging
         longPressTimeout.current = window.setTimeout(() => {
             setIsMovingLogo(true);
             if (navigator.vibrate) navigator.vibrate(50);
@@ -69,7 +113,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         const dy = touch.clientY - gestureStart.current.y;
 
         if (isMovingLogo) {
-            // Reposition mode
             const px = (touch.clientX / window.innerWidth) * 100;
             const py = (touch.clientY / window.innerHeight) * 100;
             setPos({ x: px, y: py });
@@ -110,7 +153,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             if (now - lastTapTime.current < 400) {
                 onOpenAdmin();
                 lastTapTime.current = 0;
-                setIsDetailOpen(false); // Close detail if it was opened by the first tap
+                setIsDetailOpen(false);
                 return;
             }
             lastTapTime.current = now;
@@ -120,23 +163,23 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
 
         // Swipe detected
         if (Math.abs(dy) > Math.abs(dx)) {
-            // Vertical Swipe -> Navigation
-            if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
-            else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
+            // Vertical Swipe -> Navigation (DOWN = NEXT)
+            if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
+            else if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
         } else {
-            // Horizontal Swipe -> Browser History / Reset
+            // Horizontal Swipe -> Reload / Visit
             if (Math.abs(dx) > SWIPE_THRESHOLD) {
                 if (dx < -SWIPE_THRESHOLD) {
-                    // Left Swipe -> Reload current iframe
                     const app = apps[activeIndexRef.current];
                     const iframe = iframeRefs.current[app.id];
                     if (iframe) iframe.src = iframe.src;
                     if (navigator.vibrate) navigator.vibrate(30);
                 } else {
-                    // Right Swipe -> Visit Page (Open in new tab)
                     const app = apps[activeIndexRef.current];
-                    window.open(app.url, '_blank');
-                    if (navigator.vibrate) navigator.vibrate(50);
+                    if (app.url !== 'internal:home') {
+                        window.open(app.url, '_blank');
+                        if (navigator.vibrate) navigator.vibrate(50);
+                    }
                 }
             }
         }
@@ -189,15 +232,20 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 const dx = dragOffset.x;
                 const dy = dragOffset.y;
                 if (Math.abs(dy) > Math.abs(dx)) {
-                    if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
-                    else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
+                    if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
+                    else if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
                 } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
                     if (dx < -SWIPE_THRESHOLD) {
                         const app = apps[activeIndexRef.current];
                         const iframe = iframeRefs.current[app.id];
                         if (iframe) iframe.src = iframe.src;
                     }
-                    else window.open(apps[activeIndexRef.current].url, '_blank');
+                    else {
+                        const app = apps[activeIndexRef.current];
+                        if (app.url !== 'internal:home') {
+                            window.open(app.url, '_blank');
+                        }
+                    }
                 }
                 setDragOffset({ x: 0, y: 0 });
             }
@@ -209,7 +257,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             window.removeEventListener('mousemove', onMouseMove);
             window.removeEventListener('mouseup', onMouseUp);
         };
-    }, [isMovingLogo, dragOffset, goTo]);
+    }, [isMovingLogo, dragOffset, goTo, apps]);
 
     if (total === 0) {
         return (
@@ -234,7 +282,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             >
                 {apps.map((app, index) => (
                     <div key={app.id} className="slide">
-                        {Math.abs(index - activeIndex) <= 1 ? (
+                        {app.url === 'internal:home' ? (
+                            <HomeView />
+                        ) : Math.abs(index - activeIndex) <= 1 ? (
                             <iframe
                                 ref={el => { iframeRefs.current[app.id] = el; }}
                                 src={app.url}
@@ -267,7 +317,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                         const ady = Math.abs(dy);
 
                         if (ady > adx && ady > SWIPE_THRESHOLD) {
-                            return dy < 0 ? 'hue-rotate(120deg) drop-shadow(0 0 15px #00ff00)' : 'hue-rotate(220deg) drop-shadow(0 0 15px #0000ff)';
+                            return dy > 0 ? 'hue-rotate(120deg) drop-shadow(0 0 15px #00ff00)' : 'hue-rotate(220deg) drop-shadow(0 0 15px #0000ff)';
                         }
                         if (adx > ady && adx > SWIPE_THRESHOLD) {
                             return dx < 0 ? 'hue-rotate(45deg) drop-shadow(0 0 15px #ffff00)' : 'hue-rotate(280deg) drop-shadow(0 0 15px #ff00ff)';
@@ -289,7 +339,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             {/* Gesture feedback hints */}
             {Math.abs(dragOffset.y) > SWIPE_THRESHOLD && (
                 <div className="gesture-hint-v">
-                    {dragOffset.y < 0 ? 'NEXT' : 'PREV'}
+                    {dragOffset.y > 0 ? 'NEXT' : 'PREV'}
                 </div>
             )}
             {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && (

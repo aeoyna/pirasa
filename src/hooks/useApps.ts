@@ -12,6 +12,19 @@ export interface AppMeta {
 
 const DEFAULT_APPS: AppMeta[] = [
     {
+        id: 'home',
+        name: 'Home',
+        url: 'internal:home',
+        tagline: 'Pirasa へようこそ',
+        analysis: [
+            'ジェスチャーでサクサク移動。',
+            'ロゴを下にスライドで次のサイトへ。',
+            'ダブルクリックで設定を開く。',
+        ],
+        revenue: '無料',
+        merit: '直感的なインターフェースで新しいWeb体験。',
+    },
+    {
         id: '5',
         name: 'Saturn',
         url: 'https://saturn.leach.co.jp',
@@ -120,7 +133,7 @@ const DEFAULT_APPS: AppMeta[] = [
         url: 'https://excalidraw.com',
         tagline: '手書き風のコラボ図形ツール。',
         analysis: [
-            '手書きUIの親しみやすさが圧倒的。',
+            '手書きUI前向きな感情。',
             'インストール不要でリアルタイムコラボ。',
             'オープンソースで拡張性∞。',
         ],
@@ -143,7 +156,7 @@ const DEFAULT_APPS: AppMeta[] = [
 ];
 
 // Bump version when default app list changes to force localStorage refresh
-const STORAGE_KEY = 'pirasa_apps_v5';
+const STORAGE_KEY = 'pirasa_apps_v6';
 
 export function useApps() {
     const [apps, setApps] = useState<AppMeta[]>(() => {
