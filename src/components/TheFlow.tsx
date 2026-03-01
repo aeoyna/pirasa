@@ -257,9 +257,22 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     left: `${pos.x}%`,
                     top: `${pos.y}%`,
                     transform: `translate(-50%, -50%) translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-                    filter: (Math.abs(dragOffset.x) > SWIPE_THRESHOLD || Math.abs(dragOffset.y) > SWIPE_THRESHOLD)
-                        ? `hue-rotate(180deg) drop-shadow(0 0 15px var(--red-glow))`
-                        : (isMovingLogo ? 'hue-rotate(90deg) brightness(1.2)' : 'none')
+                    filter: (() => {
+                        if (isMovingLogo) return 'hue-rotate(90deg) brightness(1.2)';
+
+                        const dx = dragOffset.x;
+                        const dy = dragOffset.y;
+                        const adx = Math.abs(dx);
+                        const ady = Math.abs(dy);
+
+                        if (ady > adx && ady > SWIPE_THRESHOLD) {
+                            return dy < 0 ? 'hue-rotate(120deg) drop-shadow(0 0 15px #00ff00)' : 'hue-rotate(220deg) drop-shadow(0 0 15px #0000ff)';
+                        }
+                        if (adx > ady && adx > SWIPE_THRESHOLD) {
+                            return dx < 0 ? 'hue-rotate(45deg) drop-shadow(0 0 15px #ffff00)' : 'hue-rotate(280deg) drop-shadow(0 0 15px #ff00ff)';
+                        }
+                        return 'none';
+                    })()
                 }}
                 onTouchStart={handleLogoTouchStart}
                 onTouchMove={handleLogoTouchMove}
@@ -321,7 +334,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                             )}
                         </div>
                         <button className="ds-close" onClick={() => setIsDetailOpen(false)}>
-                            スワイプを続ける
+                            閉じる
                         </button>
                     </div>
                 </div>
