@@ -305,20 +305,24 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 onTouchEnd={onTabEnd}
                 onMouseDown={(e) => onTabStart(e.clientX, e.clientY)}
             >
-                <button className="tab-item vote-up" onClick={() => handleVote('up')}>
-                    <span className="tab-icon">👍</span>
-                    <span className="tab-label">いいね</span>
-                </button>
                 <button className="tab-item vote-info" onClick={() => setIsDetailOpen(true)}>
-                    <span className="tab-icon">ℹ️</span>
+                    <span className="tab-icon">✨</span>
                     <span className="tab-label">情報</span>
                 </button>
-                <button className="tab-item vote-comment" onClick={() => showToast('コメント機能は開発中です')}>
-                    <span className="tab-icon">💬</span>
+                <button className="tab-item vote-up" onClick={() => handleVote('up')}>
+                    <span className="tab-icon">💖</span>
+                    <span className="tab-label">良いね</span>
+                </button>
+                <button className="tab-item vote-comment" onClick={() => showToast('コメント機能は開発中です 🧼')}>
+                    <span className="tab-icon">🧼</span>
                     <span className="tab-label">コメント</span>
                 </button>
-                <button className="tab-item vote-save" onClick={() => showToast('保存しました')}>
-                    <span className="tab-icon">🔖</span>
+                <button className="tab-item vote-visit" onClick={() => window.open(currentApp.url, '_blank')}>
+                    <span className="tab-icon">🚀</span>
+                    <span className="tab-label">訪問</span>
+                </button>
+                <button className="tab-item vote-save" onClick={() => showToast('保存しました 🎁')}>
+                    <span className="tab-icon">🎁</span>
                     <span className="tab-label">保存</span>
                 </button>
             </nav>
