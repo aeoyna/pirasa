@@ -167,7 +167,8 @@
 
 /* ─── Controller ────────────────────────────────────────── */
 .pirasa-controller {
-    position: absolute;
+    position: fixed;
+    /* Changed to fixed to stay visible across all slides */
     width: 80px;
     height: 80px;
     cursor: pointer;
