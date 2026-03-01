@@ -302,10 +302,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 onTouchMove={(e) => onTabMove(e.touches[0].clientX, e.touches[0].clientY)}
                 onTouchEnd={onTabEnd}
                 onMouseDown={(e) => onTabStart(e.clientX, e.clientY)}
-                style={{
-                    transform: isTabInteracting ? `translate(${tabDragOffset.x}px, ${tabDragOffset.y}px)` : 'none',
-                    transition: isTabInteracting ? 'none' : 'transform 0.3s ease'
-                }}
             >
                 <button className="tab-item vote-up" onClick={() => handleVote('up')}>
                     <span className="tab-icon">👍</span>
