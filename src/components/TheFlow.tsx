@@ -77,6 +77,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     // Interaction State (Ghost UI)
     const [isInteracting, setIsInteracting] = useState(false);
     const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
+    const [isLongPressing, setIsLongPressing] = useState(false);
 
     // Iframe Refs to handle navigation
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
@@ -100,8 +101,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         if (activeIndex >= total && total > 0) setActiveIndex(total - 1);
     }, [total, activeIndex]);
 
-    const [isInteracting, setIsInteracting] = useState(false);
-    const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
 
     const goTo = useCallback((nextIndex: number) => {
         if (nextIndex < 0 || nextIndex >= totalRef.current || isAnimating.current) return;
@@ -128,7 +127,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         });
 
         longPressTimeout.current = window.setTimeout(() => {
-            setIsMovingLogo(true);
+            setIsLongPressing(true);
             if (navigator.vibrate) navigator.vibrate(50);
         }, LONG_PRESS_DELAY);
     };
@@ -144,8 +143,8 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             y: (clientY / window.innerHeight) * 100
         });
 
-        if (isMovingLogo) {
-            // In Ghost UI, "moving" just updates the ghost pos
+        if (isLongPressing) {
+            // In Ghost UI, "long pressing" just updates the ghost pos
         } else {
             if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
                 if (longPressTimeout.current) {
@@ -169,7 +168,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             longPressTimeout.current = null;
         }
 
-        setIsMovingLogo(false);
+        setIsLongPressing(false);
         setIsInteracting(false);
         setDragOffset({ x: 0, y: 0 });
 
