@@ -168,20 +168,19 @@
     width: 80px;
     height: 80px;
     cursor: pointer;
-    z-index: 1000;
-    transition: all 0.3s ease;
-    opacity: 0.6;
-    /* Made logo transparent */
+    z-index: 9999;
+    /* Higher z-index to prevent disappearing */
+    /* Transition ONLY filter and opacity. DO NOT transition position (top/left) to avoid drag lag. */
+    transition: filter 0.3s ease, opacity 0.3s ease;
+    opacity: 0.5;
+    /* Permanently semi-transparent as requested */
 }
 
-.pirasa-controller:hover {
-    opacity: 1;
-    /* Full opacity on hover or interaction */
-}
+/* Removed hover opacity to maintain constant transparency */
 
 .pirasa-controller.moving {
     cursor: grabbing;
-    opacity: 0.9;
+    opacity: 0.8;
 }
 
 .controller-ring {
