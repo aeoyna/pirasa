@@ -118,9 +118,8 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             // Horizontal Swipe -> Browser History / Reset
             if (Math.abs(dx) > SWIPE_THRESHOLD) {
                 if (dx < -SWIPE_THRESHOLD) {
-                    // Left Swipe -> Reset to first app (Landing)
-                    goTo(0);
-                    if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+                    // Left Swipe -> Full Page Reload
+                    window.location.reload();
                 } else {
                     // Right Swipe -> Future expansion
                     handleHistory('forward');
@@ -196,7 +195,8 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
                     else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
                 } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
-                    handleHistory(dx > 0 ? 'forward' : 'back');
+                    if (dx < -SWIPE_THRESHOLD) window.location.reload();
+                    else handleHistory('forward');
                 }
                 setDragOffset({ x: 0, y: 0 });
             }
@@ -270,14 +270,14 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             </div>
 
             {/* Gesture feedback hints */}
-            {Math.abs(dragOffset.y) > SWIPE_THRESHOLD && !isMovingLogo && (
+            {Math.abs(dragOffset.y) > SWIPE_THRESHOLD && (
                 <div className="gesture-hint-v">
                     {dragOffset.y < 0 ? 'NEXT' : 'PREV'}
                 </div>
             )}
-            {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && !isMovingLogo && (
+            {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && (
                 <div className="gesture-hint-h">
-                    {dragOffset.x < 0 ? 'GO TO START' : 'FORWARD'}
+                    {dragOffset.x < 0 ? 'RELOAD' : 'FORWARD'}
                 </div>
             )}
 
