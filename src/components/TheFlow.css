@@ -86,6 +86,27 @@
     filter: drop-shadow(0 0 20px rgba(255, 59, 59, 0.3));
 }
 
+.my-page-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    letter-spacing: 0.05em;
+}
+
+.my-page-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
 .home-subtitle {
     font-size: 1.2rem;
     color: rgba(255, 255, 255, 0.6);
@@ -139,6 +160,12 @@
     margin-top: 20px;
     opacity: 0.5;
     animation: bounce 2s infinite;
+}
+
+.home-footer p {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 10px;
 }
 
 .scroll-indicator {
@@ -265,9 +292,6 @@
     text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
 }
 
-.gesture-hint-h:nth-of-type(1) {
-    /* Just a trick or better yet, use data attrs or conditional classes in JSX if I had them, but let's keep it simple style-wise */
-}
 
 /* ─── Progress dots ─────────────────────────────────────── */
 .progress-dots {
@@ -455,9 +479,35 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.ds-btn-primary:active,
-.ds-btn-secondary:active {
-    transform: scale(0.95);
+.ds-btn-save {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    grid-column: span 2;
+    margin-top: 5px;
+}
+
+.ds-btn-save.active {
+    background: rgba(255, 50, 100, 0.15);
+    border-color: rgba(255, 50, 100, 0.3);
+    color: #ff3264;
+    box-shadow: 0 0 20px rgba(255, 50, 100, 0.1);
+}
+
+.ds-btn-save:active {
+    transform: scale(0.98);
+}
+
+.admin-empty {
+    text-align: center;
+    padding: 80px 20px;
+    opacity: 0.5;
+}
+
+.admin-empty small {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.8rem;
 }
 
 .flow-empty {

@@ -2,8 +2,8 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { AppMeta } from '../hooks/useApps';
 import './TheFlow.css';
 
-const HomeView = () => (
-    <div className="home-view">
+const HomeView: React.FC<{ onOpenMyPage: () => void }> = ({ onOpenMyPage }) => (
+    <div className="slide">
         <div className="home-content">
             <h1 className="home-title">Pirasa</h1>
             <p className="home-subtitle">Next Generation Zap-App Store</p>
@@ -54,6 +54,9 @@ const HomeView = () => (
             </div>
 
             <div className="home-footer">
+                <button className="my-page-btn" onClick={onOpenMyPage}>
+                    👤 MY PAGE
+                </button>
                 <p>Start by swiping up the logo</p>
                 <div className="scroll-indicator">↑</div>
             </div>
@@ -64,12 +67,15 @@ const HomeView = () => (
 interface Props {
     apps: AppMeta[];
     onOpenAdmin: () => void;
+    onOpenMyPage: () => void;
+    isSaved: (id: string) => boolean;
+    toggleSave: (id: string) => void;
 }
 
 const SWIPE_THRESHOLD = 40;
 const LONG_PRESS_DELAY = 500;
 
-export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
+export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin, onOpenMyPage, isSaved, toggleSave }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -108,6 +114,14 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         setActiveIndex(nextIndex);
         setTimeout(() => { isAnimating.current = false; }, 450);
     }, []);
+
+    useEffect(() => {
+        const handleJump = (e: any) => {
+            if (typeof e.detail === 'number') goTo(e.detail);
+        };
+        window.addEventListener('pirasa:jump', handleJump);
+        return () => window.removeEventListener('pirasa:jump', handleJump);
+    }, [goTo]);
 
     // ── Gesture Helpers ──────────────────────────────────────────────
 
@@ -283,7 +297,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 {apps.map((app, index) => (
                     <div key={app.id} className="slide">
                         {app.url === 'internal:home' ? (
-                            <HomeView />
+                            <HomeView onOpenMyPage={onOpenMyPage} />
                         ) : Math.abs(index - activeIndex) <= 1 ? (
                             <iframe
                                 ref={el => { iframeRefs.current[app.id] = el; }}
@@ -303,11 +317,11 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             {/* Pirasa Controller (Floating Pie Menu) */}
             <div
                 ref={logoRef}
-                className={`pirasa-controller ${isMovingLogo ? 'moving' : ''}`}
+                className={`pirasa - controller ${isMovingLogo ? 'moving' : ''} `}
                 style={{
-                    left: `${pos.x}%`,
-                    top: `${pos.y}%`,
-                    transform: `translate(-50%, -50%) translate(${dragOffset.x}px, ${dragOffset.y}px)`,
+                    left: `${pos.x}% `,
+                    top: `${pos.y}% `,
+                    transform: `translate(-50 %, -50 %) translate(${dragOffset.x}px, ${dragOffset.y}px)`,
                     filter: (() => {
                         if (isMovingLogo) return 'hue-rotate(90deg) brightness(1.2)';
 
@@ -351,7 +365,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             {/* Progress dots */}
             <div className="progress-dots">
                 {apps.map((_, i) => (
-                    <div key={i} className={`dot ${i === activeIndex ? 'dot-active' : ''}`} />
+                    <div key={i} className={`dot ${i === activeIndex ? 'dot-active' : ''} `} />
                 ))}
             </div>
 
@@ -396,6 +410,12 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                                 window.open(currentApp.url, '_blank');
                             }}>
                                 サイトを開く
+                            </button>
+                            <button
+                                className={`ds-btn-save ${isSaved(currentApp.id) ? 'active' : ''}`}
+                                onClick={() => toggleSave(currentApp.id)}
+                            >
+                                {isSaved(currentApp.id) ? '❤️ 保存済み' : '🖤 保存する'}
                             </button>
                         </div>
 

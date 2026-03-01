@@ -157,20 +157,31 @@ const DEFAULT_APPS: AppMeta[] = [
 ];
 
 // Bump version when default app list changes to force localStorage refresh
-const STORAGE_KEY = 'pirasa_apps_v9';
+const STORAGE_KEY = 'pirasa_apps_v10';
 
 export function useApps() {
     const [apps, setApps] = useState<AppMeta[]>(() => {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) return JSON.parse(saved) as AppMeta[];
+            if (saved) {
+                const data = JSON.parse(saved);
+                return data.apps || data; // Retro-compatibility for v9
+            }
         } catch {/* ignore */ }
         return DEFAULT_APPS;
     });
 
+    const [savedIds, setSavedIds] = useState<string[]>(() => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) return JSON.parse(saved).savedIds || [];
+        } catch {/* ignore */ }
+        return [];
+    });
+
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
-    }, [apps]);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ apps, savedIds }));
+    }, [apps, savedIds]);
 
     const addApp = (app: Omit<AppMeta, 'id'>) => {
         const newApp: AppMeta = { ...app, id: Date.now().toString() };
@@ -194,5 +205,13 @@ export function useApps() {
         });
     };
 
-    return { apps, addApp, updateApp, removeApp, reorder };
+    const isSaved = (id: string) => savedIds.includes(id);
+
+    const toggleSave = (id: string) => {
+        setSavedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    return { apps, addApp, updateApp, removeApp, reorder, savedIds, isSaved, toggleSave };
 }
