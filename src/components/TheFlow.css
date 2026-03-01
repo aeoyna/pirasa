@@ -122,10 +122,14 @@
     font-weight: 900;
     font-style: italic;
     letter-spacing: 0.1em;
-    opacity: 0.2;
+    opacity: 0.8;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 20px 40px;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
     pointer-events: none;
     z-index: 500;
-    text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 /* ─── Progress dots ─────────────────────────────────────── */
