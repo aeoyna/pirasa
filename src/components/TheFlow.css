@@ -111,7 +111,8 @@
 }
 
 /* ─── Gesture Hints ──────────────────────────────────────── */
-.gesture-hint-v {
+.gesture-hint-v,
+.gesture-hint-h {
     position: fixed;
     left: 50%;
     top: 50%;

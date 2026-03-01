@@ -19,6 +19,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const [pos, setPos] = useState({ x: 50, y: 85 });
     const [isMovingLogo, setIsMovingLogo] = useState(false);
 
+    // Iframe Refs to handle navigation
+    const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
+
     const isAnimating = useRef(false);
     const activeIndexRef = useRef(activeIndex);
     activeIndexRef.current = activeIndex;
@@ -112,8 +115,27 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
             else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
         } else {
-            // Horizontal Swipe -> Browser History (Visual Feedback Only for now)
-            console.log(dx > 0 ? "Forward Nav" : "Back Nav");
+            // Horizontal Swipe -> Browser History
+            if (Math.abs(dx) > SWIPE_THRESHOLD) {
+                handleHistory(dx > 0 ? 'forward' : 'back');
+            }
+        }
+    };
+
+    const handleHistory = (direction: 'back' | 'forward') => {
+        const app = apps[activeIndexRef.current];
+        const iframe = iframeRefs.current[app.id];
+        if (!iframe) return;
+
+        try {
+            // Note: This will likely fail for cross-origin sites due to security restrictions
+            if (direction === 'back') iframe.contentWindow?.history.back();
+            else iframe.contentWindow?.history.forward();
+
+            // Visual feedback vibration
+            if (navigator.vibrate) navigator.vibrate(20);
+        } catch (err) {
+            console.warn("Cross-origin history access blocked:", err);
         }
     };
 
@@ -166,6 +188,8 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 if (Math.abs(dy) > Math.abs(dx)) {
                     if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
                     else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
+                } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
+                    handleHistory(dx > 0 ? 'forward' : 'back');
                 }
                 setDragOffset({ x: 0, y: 0 });
             }
@@ -204,6 +228,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     <div key={app.id} className="slide">
                         {Math.abs(index - activeIndex) <= 1 ? (
                             <iframe
+                                ref={el => { iframeRefs.current[app.id] = el; }}
                                 src={app.url}
                                 title={app.name}
                                 className="app-iframe"
@@ -237,9 +262,14 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             </div>
 
             {/* Gesture feedback hints */}
-            {Math.abs(dragOffset.y) > 20 && !isMovingLogo && (
+            {Math.abs(dragOffset.y) > SWIPE_THRESHOLD && !isMovingLogo && (
                 <div className="gesture-hint-v">
                     {dragOffset.y < 0 ? 'NEXT' : 'PREV'}
+                </div>
+            )}
+            {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && !isMovingLogo && (
+                <div className="gesture-hint-h">
+                    {dragOffset.x > 0 ? 'FORWARD' : 'BACK'}
                 </div>
             )}
 
