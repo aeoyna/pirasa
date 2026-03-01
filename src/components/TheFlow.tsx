@@ -7,27 +7,28 @@ interface Props {
     onOpenAdmin: () => void;
 }
 
-const SWIPE_THRESHOLD = 50;
-const TAP_MAX_MOVE = 12;
-const TAP_MAX_DURATION = 220;
+const SWIPE_THRESHOLD = 40;
+const LONG_PRESS_DELAY = 500;
 
 export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
-    const [dragOffset, setDragOffset] = useState(0);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-    // Use refs for gesture state to avoid stale closures in touch handlers
-    const isDragging = useRef(false);
+    // Controller Position (%, default center-bottom)
+    const [pos, setPos] = useState({ x: 50, y: 85 });
+    const [isMovingLogo, setIsMovingLogo] = useState(false);
+
     const isAnimating = useRef(false);
-    const touchStartY = useRef(0);
-    const touchCurrentY = useRef(0);
-    const touchStartTime = useRef(0);
-
     const activeIndexRef = useRef(activeIndex);
     activeIndexRef.current = activeIndex;
 
-    const swipeZoneRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const logoRef = useRef<HTMLDivElement>(null);
+
+    // Gesture tracking
+    const gestureStart = useRef({ x: 0, y: 0, time: 0 });
+    const longPressTimeout = useRef<number | null>(null);
 
     const total = apps.length;
     const totalRef = useRef(total);
@@ -40,163 +41,143 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const goTo = useCallback((nextIndex: number) => {
         if (nextIndex < 0 || nextIndex >= totalRef.current || isAnimating.current) return;
         isAnimating.current = true;
-        setDragOffset(0);
+        setDragOffset({ x: 0, y: 0 });
         setActiveIndex(nextIndex);
         setTimeout(() => { isAnimating.current = false; }, 450);
     }, []);
 
-    // ── Shared drag logic (used by both zone and 2-finger) ────────────
-    const startDrag = (y: number) => {
-        touchStartY.current = y;
-        touchCurrentY.current = y;
-        touchStartTime.current = Date.now();
-        isDragging.current = true;
+    // ── Gesture Helpers ──────────────────────────────────────────────
+
+    const handleLogoTouchStart = (e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        gestureStart.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+
+        // Long press for dragging
+        longPressTimeout.current = window.setTimeout(() => {
+            setIsMovingLogo(true);
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, LONG_PRESS_DELAY);
     };
 
-    const moveDrag = (y: number) => {
-        if (!isDragging.current || isAnimating.current) return;
-        touchCurrentY.current = y;
-        const delta = y - touchStartY.current;
-        const idx = activeIndexRef.current;
-        const tot = totalRef.current;
-        const resistance = (idx === 0 && delta > 0) || (idx === tot - 1 && delta < 0) ? 0.2 : 1;
-        setDragOffset(delta * resistance);
-    };
+    const handleLogoTouchMove = (e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        const dx = touch.clientX - gestureStart.current.x;
+        const dy = touch.clientY - gestureStart.current.y;
 
-    const endDrag = (): boolean => {
-        if (!isDragging.current) return false;
-        isDragging.current = false;
-        const delta = touchCurrentY.current - touchStartY.current;
-        const dur = Date.now() - touchStartTime.current;
-        const isTap = Math.abs(delta) < TAP_MAX_MOVE && dur < TAP_MAX_DURATION;
-
-        if (!isTap) {
-            if (delta < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
-            else if (delta > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
-            else {
-                isAnimating.current = true;
-                setDragOffset(0);
-                setTimeout(() => { isAnimating.current = false; }, 300);
-            }
+        if (isMovingLogo) {
+            // Reposition mode
+            const px = (touch.clientX / window.innerWidth) * 100;
+            const py = (touch.clientY / window.innerHeight) * 100;
+            setPos({ x: px, y: py });
         } else {
-            setDragOffset(0);
-        }
-        return isTap;
-    };
-
-    // ── Bottom gradient swipe zone (1-finger) ─────────────────────────
-    const handleZoneTouchStart = (e: React.TouchEvent) => {
-        if (isAnimating.current) return;
-        e.stopPropagation();
-        startDrag(e.touches[0].clientY);
-    };
-
-    const handleZoneTouchMove = (e: React.TouchEvent) => {
-        e.stopPropagation();
-        moveDrag(e.touches[0].clientY);
-    };
-
-    const handleZoneTouchEnd = (e: React.TouchEvent) => {
-        e.stopPropagation();
-        const wasTap = endDrag();
-        if (wasTap && swipeZoneRef.current) {
-            // Let the tap fall through to the iframe
-            swipeZoneRef.current.style.pointerEvents = 'none';
-            setTimeout(() => {
-                if (swipeZoneRef.current) swipeZoneRef.current.style.pointerEvents = 'auto';
-            }, 400);
+            // Gesture mode
+            if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                if (longPressTimeout.current) {
+                    clearTimeout(longPressTimeout.current);
+                    longPressTimeout.current = null;
+                }
+            }
+            setDragOffset({ x: dx, y: dy });
         }
     };
 
-    // ── 2-finger whole-screen swipe ────────────────────────────────────
-    const isMultiTouch = useRef(false);
+    const handleLogoTouchEnd = (e: React.TouchEvent) => {
+        if (longPressTimeout.current) {
+            clearTimeout(longPressTimeout.current);
+            longPressTimeout.current = null;
+        }
 
-    useEffect(() => {
-        const el = containerRef.current;
-        if (!el) return;
+        if (isMovingLogo) {
+            setIsMovingLogo(false);
+            setDragOffset({ x: 0, y: 0 });
+            return;
+        }
 
-        const onStart = (e: TouchEvent) => {
-            if (isAnimating.current || e.touches.length < 2) return;
-            e.preventDefault(); // stop pinch-zoom
-            isMultiTouch.current = true;
-            startDrag(e.touches[0].clientY);
-        };
+        const dx = dragOffset.x;
+        const dy = dragOffset.y;
+        const duration = Date.now() - gestureStart.current.time;
 
-        const onMove = (e: TouchEvent) => {
-            if (!isMultiTouch.current) return;
-            e.preventDefault();
-            moveDrag(e.touches[0].clientY);
-        };
+        // Reset visual offset
+        setDragOffset({ x: 0, y: 0 });
 
-        const onEnd = () => {
-            if (!isMultiTouch.current) return;
-            isMultiTouch.current = false;
-            endDrag();
-        };
+        // Tap detected
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && duration < 300) {
+            setIsDetailOpen(true);
+            return;
+        }
 
-        el.addEventListener('touchstart', onStart, { passive: false });
-        el.addEventListener('touchmove', onMove, { passive: false });
-        el.addEventListener('touchend', onEnd);
-        return () => {
-            el.removeEventListener('touchstart', onStart);
-            el.removeEventListener('touchmove', onMove);
-            el.removeEventListener('touchend', onEnd);
-        };
-    }, []);
+        // Swipe detected
+        if (Math.abs(dy) > Math.abs(dx)) {
+            // Vertical Swipe -> Navigation
+            if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
+            else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
+        } else {
+            // Horizontal Swipe -> Browser History (Visual Feedback Only for now)
+            console.log(dx > 0 ? "Forward Nav" : "Back Nav");
+        }
+    };
 
-    // ── Mouse wheel (desktop) ─────────────────────────────────────────
-    const wheelLock = useRef(false);
+    // ── Mouse Support (PC) ───────────────────────────────────────────
+    const isMouseDown = useRef(false);
 
-    const doWheel = useCallback((deltaY: number) => {
-        if (wheelLock.current || isAnimating.current) return;
-        wheelLock.current = true;
-        if (deltaY > 30) goTo(activeIndexRef.current + 1);
-        else if (deltaY < -30) goTo(activeIndexRef.current - 1);
-        setTimeout(() => { wheelLock.current = false; }, 700);
-    }, [goTo]);
-
-    const handleWheel = useCallback((e: WheelEvent) => {
-        e.preventDefault();
-        doWheel(e.deltaY);
-    }, [doWheel]);
-
-    const handleZoneWheel = (e: React.WheelEvent) => {
-        e.preventDefault();
-        doWheel(e.deltaY);
+    const handleMouseDown = (e: React.MouseEvent) => {
+        gestureStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+        isMouseDown.current = true;
+        longPressTimeout.current = window.setTimeout(() => {
+            setIsMovingLogo(true);
+        }, LONG_PRESS_DELAY);
     };
 
     useEffect(() => {
-        const el = containerRef.current;
-        if (!el) return;
-        el.addEventListener('wheel', handleWheel, { passive: false });
-        return () => el.removeEventListener('wheel', handleWheel);
-    }, [handleWheel]);
+        const onMouseMove = (e: MouseEvent) => {
+            if (!isMouseDown.current) return;
+            const dx = e.clientX - gestureStart.current.x;
+            const dy = e.clientY - gestureStart.current.y;
 
-    // ── Mouse drag on swipe zone (PC) ────────────────────────────────
-    const mouseDragging = useRef(false);
-
-    const handleZoneMouseDown = (e: React.MouseEvent) => {
-        mouseDragging.current = true;
-        startDrag(e.clientY);
-    };
-
-    useEffect(() => {
-        const onMove = (e: MouseEvent) => {
-            if (!mouseDragging.current) return;
-            moveDrag(e.clientY);
+            if (isMovingLogo) {
+                setPos({
+                    x: (e.clientX / window.innerWidth) * 100,
+                    y: (e.clientY / window.innerHeight) * 100
+                });
+            } else {
+                if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                    if (longPressTimeout.current) {
+                        clearTimeout(longPressTimeout.current);
+                        longPressTimeout.current = null;
+                    }
+                }
+                setDragOffset({ x: dx, y: dy });
+            }
         };
-        const onUp = () => {
-            if (!mouseDragging.current) return;
-            mouseDragging.current = false;
-            endDrag();
+
+        const onMouseUp = () => {
+            if (!isMouseDown.current) return;
+            isMouseDown.current = false;
+            if (longPressTimeout.current) {
+                clearTimeout(longPressTimeout.current);
+                longPressTimeout.current = null;
+            }
+            if (isMovingLogo) {
+                setIsMovingLogo(false);
+                setDragOffset({ x: 0, y: 0 });
+            } else {
+                const dx = dragOffset.x;
+                const dy = dragOffset.y;
+                if (Math.abs(dy) > Math.abs(dx)) {
+                    if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
+                    else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
+                }
+                setDragOffset({ x: 0, y: 0 });
+            }
         };
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
         return () => {
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('mouseup', onUp);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
         };
-    }, []);
+    }, [isMovingLogo, dragOffset, goTo]);
 
     if (total === 0) {
         return (
@@ -207,20 +188,16 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         );
     }
 
-    const totalTranslate = -activeIndex * 100 + (dragOffset / window.innerHeight) * 100;
     const currentApp = apps[activeIndex];
 
     return (
-        <div
-            className="flow-root"
-            ref={containerRef}
-        >
+        <div className="flow-root" ref={containerRef}>
             {/* Slide stack */}
             <div
                 className="slide-stack"
                 style={{
-                    transform: `translateY(${totalTranslate}vh)`,
-                    transition: isDragging.current ? 'none' : 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)',
+                    transform: `translateY(-${activeIndex * 100}vh)`,
+                    transition: isAnimating.current ? 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
                 }}
             >
                 {apps.map((app, index) => (
@@ -236,41 +213,35 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                         ) : (
                             <div className="slide-placeholder" />
                         )}
-
-                        {/* The gradient doubles as the swipe zone (touch + mouse drag + wheel) */}
-                        <div
-                            ref={index === activeIndex ? swipeZoneRef : undefined}
-                            className="slide-gradient swipe-zone"
-                            onTouchStart={handleZoneTouchStart}
-                            onTouchMove={handleZoneTouchMove}
-                            onTouchEnd={handleZoneTouchEnd}
-                            onWheel={handleZoneWheel}
-                            onMouseDown={handleZoneMouseDown}
-                        />
-
-                        <div className="slide-info">
-                            <p className="slide-tagline">{app.tagline}</p>
-                            <h2 className="slide-name">{app.name}</h2>
-                        </div>
-
-                        <div className="slide-actions">
-                            <button className="p-btn" onClick={() => setIsDetailOpen(true)}>
-                                <img src="/logo.png" alt="pirasa" />
-                            </button>
-                            <span className="p-btn-label">pirasa</span>
-                        </div>
-
-                        {index === 0 && activeIndex === 0 && (
-                            <div className="swipe-hint">
-                                <div className="hint-arrow">
-                                    <span /><span /><span />
-                                </div>
-                                <p>ここから上にスワイプ</p>
-                            </div>
-                        )}
                     </div>
                 ))}
             </div>
+
+            {/* Pirasa Controller (Floating Pie Menu) */}
+            <div
+                ref={logoRef}
+                className={`pirasa-controller ${isMovingLogo ? 'moving' : ''}`}
+                style={{
+                    left: `${pos.x}%`,
+                    top: `${pos.y}%`,
+                    transform: `translate(-50%, -50%) translate(${dragOffset.x}px, ${dragOffset.y}px)`
+                }}
+                onTouchStart={handleLogoTouchStart}
+                onTouchMove={handleLogoTouchMove}
+                onTouchEnd={handleLogoTouchEnd}
+                onMouseDown={handleMouseDown}
+            >
+                <div className="controller-ring">
+                    <img src="/logo.png" alt="pirasa" className="controller-logo" />
+                </div>
+            </div>
+
+            {/* Gesture feedback hints */}
+            {Math.abs(dragOffset.y) > 20 && !isMovingLogo && (
+                <div className="gesture-hint-v">
+                    {dragOffset.y < 0 ? 'NEXT' : 'PREV'}
+                </div>
+            )}
 
             {/* Progress dots */}
             <div className="progress-dots">
@@ -287,9 +258,9 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 <div className="detail-overlay" onClick={() => setIsDetailOpen(false)}>
                     <div className="detail-sheet" onClick={e => e.stopPropagation()}>
                         <div className="pull-bar" />
-                        <p className="ds-eyebrow">pirasa の目利き</p>
+                        <p className="ds-eyebrow">{currentApp.tagline}</p>
                         <h1 className="ds-name">{currentApp.name}</h1>
-                        <p className="ds-section-title">3行の鋭い分析</p>
+                        <p className="ds-section-title">pirasa の目利き</p>
                         <div className="ds-analysis">
                             {currentApp.analysis.map((line, i) => (
                                 <div key={i} className="ds-analysis-line">{line}</div>
