@@ -168,32 +168,6 @@
     box-shadow: 0 0 15px var(--red-glow);
 }
 
-/* ─── Settings button ───────────────────────────────────── */
-.settings-btn {
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--glass);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border);
-    color: var(--text-2);
-    font-size: 1.2rem;
-    cursor: pointer;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.settings-btn:hover {
-    background: var(--glass-heavy);
-    color: #fff;
-    transform: rotate(45deg);
-}
 
 /* ─── Detail Overlay ─────────────────────────────────────── */
 .detail-overlay {

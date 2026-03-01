@@ -118,8 +118,11 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             // Horizontal Swipe -> Browser History / Reset
             if (Math.abs(dx) > SWIPE_THRESHOLD) {
                 if (dx < -SWIPE_THRESHOLD) {
-                    // Left Swipe -> Full Page Reload
-                    window.location.reload();
+                    // Left Swipe -> Reload current iframe
+                    const app = apps[activeIndexRef.current];
+                    const iframe = iframeRefs.current[app.id];
+                    if (iframe) iframe.src = iframe.src;
+                    if (navigator.vibrate) navigator.vibrate(30);
                 } else {
                     // Right Swipe -> Visit Page (Open in new tab)
                     const app = apps[activeIndexRef.current];
@@ -180,7 +183,11 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     if (dy < -SWIPE_THRESHOLD) goTo(activeIndexRef.current + 1);
                     else if (dy > SWIPE_THRESHOLD) goTo(activeIndexRef.current - 1);
                 } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
-                    if (dx < -SWIPE_THRESHOLD) window.location.reload();
+                    if (dx < -SWIPE_THRESHOLD) {
+                        const app = apps[activeIndexRef.current];
+                        const iframe = iframeRefs.current[app.id];
+                        if (iframe) iframe.src = iframe.src;
+                    }
                     else window.open(apps[activeIndexRef.current].url, '_blank');
                 }
                 setDragOffset({ x: 0, y: 0 });
@@ -277,7 +284,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
             )}
             {Math.abs(dragOffset.x) > SWIPE_THRESHOLD && (
                 <div className="gesture-hint-h">
-                    {dragOffset.x < 0 ? 'RELOAD' : 'VISIT'}
+                    {dragOffset.x < 0 ? 'RELOAD SITE' : 'VISIT'}
                 </div>
             )}
 
@@ -287,9 +294,6 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     <div key={i} className={`dot ${i === activeIndex ? 'dot-active' : ''}`} />
                 ))}
             </div>
-
-            {/* Settings */}
-            <button className="settings-btn" onClick={onOpenAdmin} title="サイト設定">⚙</button>
 
             {/* Detail overlay */}
             {isDetailOpen && (
