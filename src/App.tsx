@@ -6,11 +6,38 @@ import './App.css'
 
 function App() {
   const [adminOpen, setAdminOpen] = useState(false)
-  const { apps, addApp, updateApp, removeApp } = useApps()
+  const {
+    apps,
+    loading,
+    deviceId,
+    savedAppIds,
+    addApp,
+    updateApp,
+    removeApp,
+    incrementLike,
+    toggleSave
+  } = useApps()
+
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="loader">✦</div>
+        <p>Loading Pirasa...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app-root">
-      <TheFlow apps={apps} onOpenAdmin={() => setAdminOpen(true)} />
+      <TheFlow
+        apps={apps}
+        deviceId={deviceId}
+        savedAppIds={savedAppIds}
+        onOpenAdmin={() => setAdminOpen(true)}
+        onIncrementLike={incrementLike}
+        onToggleSave={toggleSave}
+        onAddSite={addApp}
+      />
       {adminOpen && (
         <AdminPanel
           apps={apps}

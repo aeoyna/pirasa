@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { AppMeta } from '../hooks/useApps';
+import { GENRES } from '../hooks/useApps';
 import './TheFlow.css';
 
 const HomeView = () => (
@@ -51,48 +52,67 @@ const HomeView = () => (
 
 interface Props {
     apps: AppMeta[];
+    deviceId: string;
+    savedAppIds: string[];
     onOpenAdmin: () => void;
+    onIncrementLike: (id: string) => void;
+    onToggleSave: (id: string) => void;
+    onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<void>;
 }
 
-const SWIPE_THRESHOLD = 40;
+// const SWIPE_THRESHOLD = 40; // Unused
 
-export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
+export const TheFlow: React.FC<Props> = ({
+    apps,
+    deviceId,
+    savedAppIds,
+    onOpenAdmin,
+    onIncrementLike,
+    onToggleSave,
+    onAddSite
+}) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isListOpen, setIsListOpen] = useState(false);
     const [isMyPageOpen, setIsMyPageOpen] = useState(false);
+    const [myPageTab, setMyPageTab] = useState<'saved' | 'posts' | 'add'>('saved');
+    const [postForm, setPostForm] = useState({
+        name: '',
+        url: '',
+        tagline: '',
+        analysis: ['', '', ''],
+        revenue: '',
+        merit: '',
+        genre: ''
+    });
     const [toast, setToast] = useState<string | null>(null);
+    const [isTabInteracting, setIsTabInteracting] = useState(false);
+    const [tabDragOffset, setTabDragOffset] = useState({ x: 0, y: 0 });
 
-    // Iframe Refs to handle navigation
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
-
     const isAnimating = useRef(false);
     const activeIndexRef = useRef(activeIndex);
     activeIndexRef.current = activeIndex;
-
     const containerRef = useRef<HTMLDivElement>(null);
-
-    // Gesture tracking
-    const gestureStart = useRef({ x: 0, y: 0, time: 0 });
-
     const total = apps.length;
     const totalRef = useRef(total);
     totalRef.current = total;
+    const tabGestureStart = useRef({ x: 0, y: 0, time: 0 });
+    const lastWheelTime = useRef(0);
+
+    const WHEEL_COOLDOWN = 600;
+    const WHEEL_THRESHOLD = 30;
 
     useEffect(() => {
         if (activeIndex >= total && total > 0) setActiveIndex(total - 1);
     }, [total, activeIndex]);
 
-
     const goTo = useCallback((nextIndex: number) => {
         if (nextIndex < 0 || nextIndex >= totalRef.current || isAnimating.current) return;
         isAnimating.current = true;
-        setDragOffset({ x: 0, y: 0 });
         setActiveIndex(nextIndex);
         setTimeout(() => { isAnimating.current = false; }, 450);
     }, []);
-
-    // ── Gesture Helpers (Ghost UI: Margin-Only) ───────────────────────
 
     const showToast = (msg: string) => {
         setToast(msg);
@@ -100,20 +120,13 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     };
 
     const handleVote = (type: 'up' | 'down') => {
-        console.log(`${type === 'up' ? 'Upvoted' : 'Downvoted'}:`, apps[activeIndexRef.current].name);
-        if (navigator.vibrate) navigator.vibrate([30, 50]);
-        // Visual feedback for voting can be added here
+        const currentApp = apps[activeIndexRef.current];
+        if (!currentApp) return;
+        if (type === 'up') {
+            onIncrementLike(currentApp.id);
+            showToast('Liked! ♥');
+        }
     };
-
-    // handleVote remains for button clicks
-    const handleVote = (type: 'up' | 'down') => {
-        console.log(`${type === 'up' ? 'Upvoted' : 'Downvoted'}:`, apps[activeIndexRef.current].name);
-        if (navigator.vibrate) navigator.vibrate([30, 50]);
-    };
-    // ── Tab Bar Gestures ──────────────────────────────────────────
-    const tabGestureStart = useRef({ x: 0, y: 0, time: 0 });
-    const [isTabInteracting, setIsTabInteracting] = useState(false);
-    const [tabDragOffset, setTabDragOffset] = useState({ x: 0, y: 0 });
 
     const onTabStart = (clientX: number, clientY: number) => {
         tabGestureStart.current = { x: clientX, y: clientY, time: Date.now() };
@@ -136,17 +149,36 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
         setTabDragOffset({ x: 0, y: 0 });
 
         if (Math.abs(dy) > Math.abs(dx)) {
-            // Vertical: Navigation
             if (dy < -20) goTo(activeIndexRef.current + 1);
             else if (dy > 20) goTo(activeIndexRef.current - 1);
         } else {
-            // Horizontal: List & MyPage
             if (dx < -40) setIsListOpen(true);
             else if (dx > 40) setIsMyPageOpen(true);
         }
     };
 
-    // ── Mouse Support (PC) ───────────────────────────────────────────
+    const handleWheel = (e: React.WheelEvent) => {
+        const now = Date.now();
+        if (now - lastWheelTime.current < WHEEL_COOLDOWN) return;
+
+        const { deltaX, deltaY } = e;
+
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+            // Vertical: Navigation
+            if (Math.abs(deltaY) > WHEEL_THRESHOLD) {
+                if (deltaY > 0) goTo(activeIndexRef.current + 1);
+                else if (deltaY < 0) goTo(activeIndexRef.current - 1);
+                lastWheelTime.current = now;
+            }
+        } else {
+            // Horizontal: List & MyPage
+            if (Math.abs(deltaX) > WHEEL_THRESHOLD) {
+                if (deltaX > 0) setIsListOpen(true);
+                else setIsMyPageOpen(true);
+                lastWheelTime.current = now;
+            }
+        }
+    };
 
     useEffect(() => {
         const moveHandler = (e: MouseEvent) => {
@@ -175,7 +207,14 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
     const currentApp = apps[activeIndex];
 
     // Safety check: if currentApp is gone (e.g. index sync issue), don't crash the render
-    if (total > 0 && !currentApp) return null;
+    if (total > 0 && !currentApp) {
+        return (
+            <div className="flow-empty">
+                <p>サイトを読み込んでいます...</p>
+                <div className="loader">✦</div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -219,6 +258,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 onTouchMove={(e) => onTabMove(e.touches[0].clientX, e.touches[0].clientY)}
                 onTouchEnd={onTabEnd}
                 onMouseDown={(e) => onTabStart(e.clientX, e.clientY)}
+                onWheel={handleWheel}
             >
                 <button className="tab-item vote-info" onClick={() => setIsDetailOpen(true)}>
                     <span className="tab-icon">✦</span>
@@ -226,7 +266,7 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                 </button>
                 <button className="tab-item vote-up" onClick={() => handleVote('up')}>
                     <span className="tab-icon">♥</span>
-                    <span className="tab-label">Like</span>
+                    <span className="tab-label">{currentApp.likesCount || 0} Likes</span>
                 </button>
                 <button className="tab-item vote-comment" onClick={() => showToast('Feature Coming Soon ✒')}>
                     <span className="tab-icon">✒</span>
@@ -236,9 +276,12 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     <span className="tab-icon">↗</span>
                     <span className="tab-label">Visit</span>
                 </button>
-                <button className="tab-item vote-save" onClick={() => showToast('Saved to Library ✥')}>
-                    <span className="tab-icon">✥</span>
-                    <span className="tab-label">Save</span>
+                <button
+                    className={`tab-item vote-save ${savedAppIds.includes(currentApp.id) ? 'active' : ''}`}
+                    onClick={() => onToggleSave(currentApp.id)}
+                >
+                    <span className="tab-icon">{savedAppIds.includes(currentApp.id) ? '★' : '✥'}</span>
+                    <span className="tab-label">{savedAppIds.includes(currentApp.id) ? 'Saved' : 'Save'}</span>
                 </button>
             </nav>
 
@@ -258,7 +301,10 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                     <div className="detail-sheet" onClick={e => e.stopPropagation()}>
                         <div className="pull-bar" />
                         <p className="ds-eyebrow">{currentApp.tagline}</p>
-                        <h1 className="ds-name">{currentApp.name}</h1>
+                        <h1 className="ds-name">
+                            {currentApp.name}
+                            {currentApp.genre && <span className="ds-genre-tag">{currentApp.genre}</span>}
+                        </h1>
                         <p className="ds-section-title">pirasa の目利き</p>
                         <div className="ds-analysis">
                             {currentApp.analysis.map((line, i) => (
@@ -325,7 +371,10 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                                         {app.url === 'internal:home' ? '🏠' : app.name[0]}
                                     </div>
                                     <div className="app-card-info">
-                                        <h3>{app.name}</h3>
+                                        <h3>
+                                            {app.name}
+                                            {app.genre && <span className="app-card-genre">{app.genre}</span>}
+                                        </h3>
                                         <p>{app.tagline}</p>
                                     </div>
                                 </div>
@@ -343,27 +392,136 @@ export const TheFlow: React.FC<Props> = ({ apps, onOpenAdmin }) => {
                             <h2>マイページ</h2>
                             <button className="list-close" onClick={() => setIsMyPageOpen(false)}>×</button>
                         </div>
-                        <div className="mypage-content">
-                            <div className="mypage-profile">
-                                <div className="profile-avatar">👤</div>
-                                <div className="profile-info">
-                                    <h3>Pirasa User</h3>
-                                    <p>探索したサイト: 42</p>
-                                </div>
-                            </div>
-                            <div className="mypage-stats">
-                                <div className="stat-card">
-                                    <label>いいね</label>
-                                    <span>28</span>
-                                </div>
-                                <div className="stat-card">
-                                    <label>保存</label>
-                                    <span>15</span>
-                                </div>
-                            </div>
-                            <button className="ds-btn-primary" style={{ width: '100%', marginTop: '20px' }} onClick={() => onOpenAdmin()}>
-                                管理画面を開く
+                        <div className="mypage-nav">
+                            <button
+                                className={`mypage-tab-btn ${myPageTab === 'saved' ? 'active' : ''}`}
+                                onClick={() => setMyPageTab('saved')}
+                            >
+                                保存済み
                             </button>
+                            <button
+                                className={`mypage-tab-btn ${myPageTab === 'posts' ? 'active' : ''}`}
+                                onClick={() => setMyPageTab('posts')}
+                            >
+                                自分の投稿
+                            </button>
+                            <button
+                                className={`mypage-tab-btn ${myPageTab === 'add' ? 'active' : ''}`}
+                                onClick={() => setMyPageTab('add')}
+                            >
+                                サイトを推薦
+                            </button>
+                        </div>
+
+                        <div className="mypage-scroll-area">
+                            {myPageTab === 'saved' && (
+                                <div className="app-grid">
+                                    {apps.filter(a => savedAppIds.includes(a.id)).length === 0 ? (
+                                        <p className="empty-msg">保存したサイトはありません。</p>
+                                    ) : (
+                                        apps.filter(a => savedAppIds.includes(a.id)).map((app) => (
+                                            <div key={app.id} className="app-card" onClick={() => {
+                                                const idx = apps.findIndex(a => a.id === app.id);
+                                                if (idx !== -1) {
+                                                    goTo(idx);
+                                                    setIsMyPageOpen(false);
+                                                }
+                                            }}>
+                                                <div className="app-card-icon">{app.name[0]}</div>
+                                                <div className="app-card-info">
+                                                    <h3>{app.name}</h3>
+                                                    <p>{app.tagline}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+
+                            {myPageTab === 'posts' && (
+                                <div className="app-grid">
+                                    {apps.filter(a => a.created_by === deviceId).length === 0 ? (
+                                        <p className="empty-msg">まだ投稿していません。</p>
+                                    ) : (
+                                        apps.filter(a => a.created_by === deviceId).map((app) => (
+                                            <div key={app.id} className="app-card">
+                                                <div className="app-card-icon">{app.name[0]}</div>
+                                                <div className="app-card-info">
+                                                    <h3>{app.name}</h3>
+                                                    <p>{app.likesCount || 0} Likes</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+
+                            {myPageTab === 'add' && (
+                                <form className="mypage-form" onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    await onAddSite({
+                                        ...postForm,
+                                        analysis: postForm.analysis.filter(a => a.trim() !== '')
+                                    });
+                                    setPostForm({
+                                        name: '',
+                                        url: '',
+                                        tagline: '',
+                                        analysis: ['', '', ''],
+                                        revenue: '',
+                                        merit: '',
+                                        genre: ''
+                                    });
+                                    setMyPageTab('posts');
+                                    showToast('Site posted! 🚀');
+                                }}>
+                                    <div className="form-group">
+                                        <label>サイト名 *</label>
+                                        <input
+                                            value={postForm.name}
+                                            onChange={e => setPostForm({ ...postForm, name: e.target.value })}
+                                            required
+                                            placeholder="例: Saturn"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>URL *</label>
+                                        <input
+                                            value={postForm.url}
+                                            onChange={e => setPostForm({ ...postForm, url: e.target.value })}
+                                            required
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>キャッチコピー</label>
+                                        <input
+                                            value={postForm.tagline}
+                                            onChange={e => setPostForm({ ...postForm, tagline: e.target.value })}
+                                            placeholder="AIが動くExcel..."
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>ジャンル *</label>
+                                        <select
+                                            value={postForm.genre}
+                                            onChange={e => setPostForm({ ...postForm, genre: e.target.value })}
+                                            required
+                                        >
+                                            <option value="">選択してください</option>
+                                            {GENRES.map(g => (
+                                                <option key={g} value={g}>{g}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <button type="submit" className="form-submit-btn">投稿する</button>
+                                </form>
+                            )}
+                        </div>
+
+                        <div className="mypage-footer">
+                            <p>Device ID: {deviceId}</p>
+                            <p onDoubleClick={onOpenAdmin} style={{ cursor: 'pointer', opacity: 0.3 }}>Admin</p>
                         </div>
                     </div>
                 </div>

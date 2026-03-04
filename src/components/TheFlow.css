@@ -371,6 +371,111 @@
     background: var(--chic-accent);
     transform: scale(2);
     box-shadow: 0 0 15px var(--chic-accent-glow);
+
+}
+
+/* My Page Enhancements */
+.mypage-nav {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mypage-tab-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 8px 4px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mypage-tab-btn.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+    font-weight: bold;
+}
+
+.mypage-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.empty-msg {
+    text-align: center;
+    padding: 40px 20px;
+    opacity: 0.5;
+    font-size: 14px;
+}
+
+/* My Page Form */
+.mypage-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 12px;
+    font-weight: bold;
+    opacity: 0.7;
+}
+
+.form-group input,
+.form-group select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.form-submit-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: bold;
+    margin-top: 8px;
+    cursor: pointer;
+}
+
+.mypage-footer {
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 10px;
+    opacity: 0.4;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Action Hub Active State */
+.vote-save.active .tab-icon {
+    color: #ffcc00;
+}
+
+.vote-save.active .tab-label {
+    color: #fff;
+    font-weight: bold;
 }
 
 /* ─── Detail Overlay ─────────────────────────────────────── */
@@ -437,6 +542,21 @@
     font-weight: 300;
     letter-spacing: -0.02em;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ds-genre-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--chic-accent-glow);
+    color: var(--chic-accent);
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 0.5px solid var(--chic-accent);
 }
 
 .ds-section-title {
@@ -676,6 +796,19 @@
 .app-card-info h3 {
     font-size: 0.95rem;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.app-card-genre {
+    font-size: 0.65rem;
+    font-weight: 600;
+    border: 0.5px solid var(--chic-accent);
+    color: var(--chic-accent);
+    padding: 2px 8px;
+    border-radius: 10px;
+    opacity: 0.8;
 }
 
 .app-card-info p {

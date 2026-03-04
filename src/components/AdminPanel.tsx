@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { type AppMeta } from '../hooks/useApps';
+import { type AppMeta, GENRES } from '../hooks/useApps';
 import './AdminPanel.css';
 
 interface Props {
@@ -17,6 +17,7 @@ const EMPTY_FORM: Omit<AppMeta, 'id'> = {
     analysis: ['', '', ''],
     revenue: '',
     merit: '',
+    genre: '',
 };
 
 export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, onClose }) => {
@@ -32,7 +33,15 @@ export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, o
 
     const openEdit = (app: AppMeta) => {
         setEditing(app);
-        setForm({ name: app.name, url: app.url, tagline: app.tagline, analysis: [...app.analysis], revenue: app.revenue, merit: app.merit });
+        setForm({
+            name: app.name,
+            url: app.url,
+            tagline: app.tagline,
+            analysis: [...app.analysis],
+            revenue: app.revenue,
+            merit: app.merit,
+            genre: app.genre || ''
+        });
         setView('form');
     };
 
@@ -135,6 +144,19 @@ export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, o
                         onChange={e => setForm(f => ({ ...f, merit: e.target.value }))}
                         placeholder="例: ブラウザだけで完結する体験。"
                     />
+
+                    <label>ジャンル<span>*</span></label>
+                    <select
+                        value={form.genre}
+                        onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}
+                        className="admin-select"
+                        required
+                    >
+                        <option value="">選択してください</option>
+                        {GENRES.map(g => (
+                            <option key={g} value={g}>{g}</option>
+                        ))}
+                    </select>
 
                     <button
                         className="admin-save"
