@@ -137,8 +137,8 @@
 }
 
 .sd-icon {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     border-radius: 12px;
     overflow: hidden;
     background: #222;
@@ -166,7 +166,7 @@
 }
 
 .sd-title {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #fff;
     white-space: nowrap;
