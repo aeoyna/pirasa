@@ -257,19 +257,6 @@ export const TheFlow: React.FC<Props> = ({
                                             <div className="sd-info">
                                                 <div className="sd-title-row">
                                                     <div className="sd-title">{app.name}</div>
-                                                    <div className="sd-stats">
-                                                        <div className="sd-vote-group">
-                                                            <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
-                                                            <span className="sd-vote-count">{app.likesCount || 0}</span>
-                                                            <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
-                                                        </div>
-                                                        <span
-                                                            className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
-                                                            onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
-                                                        >
-                                                            ★ {savedAppIds.includes(app.id) ? 'Saved' : 'Save'}
-                                                        </span>
-                                                    </div>
                                                 </div>
                                                 {app.merit && (
                                                     <div className="sd-chips merit-chips">
@@ -279,6 +266,19 @@ export const TheFlow: React.FC<Props> = ({
                                             </div>
                                         </div>
                                         <div className="sd-right">
+                                            <div className="sd-stats">
+                                                <div className="sd-vote-group">
+                                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
+                                                    <span className="sd-vote-count">{app.likesCount || 0}</span>
+                                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
+                                                </div>
+                                                <span
+                                                    className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
+                                                    onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
+                                                >
+                                                    ★ {savedAppIds.includes(app.id) ? 'Saved' : 'Save'}
+                                                </span>
+                                            </div>
                                             <button className="sd-play-btn" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
                                                 🚀 Visit
                                             </button>
