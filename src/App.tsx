@@ -17,6 +17,7 @@ function App() {
     updateApp,
     removeApp,
     incrementLike,
+    decrementLike,
     toggleSave
   } = useApps(user?.id)
 
@@ -38,6 +39,7 @@ function App() {
         userId={user?.id}
         onOpenAdmin={() => setAdminOpen(true)}
         onIncrementLike={incrementLike}
+        onDecrementLike={decrementLike}
         onToggleSave={toggleSave}
         onAddSite={addApp}
       />

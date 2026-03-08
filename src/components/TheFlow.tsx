@@ -57,6 +57,7 @@ interface Props {
     userId?: string;
     onOpenAdmin: () => void;
     onIncrementLike: (id: string) => void;
+    onDecrementLike: (id: string) => void;
     onToggleSave: (id: string) => void;
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<void>;
 }
@@ -67,6 +68,7 @@ export const TheFlow: React.FC<Props> = ({
     savedAppIds,
     onOpenAdmin,
     onIncrementLike,
+    onDecrementLike,
     onToggleSave,
     onAddSite
 }) => {
@@ -121,6 +123,8 @@ export const TheFlow: React.FC<Props> = ({
         if (type === 'up') {
             onIncrementLike(currentApp.id);
             showToast('Liked! ♥');
+        } else if (type === 'down') {
+            onDecrementLike(currentApp.id);
         }
     };
 
@@ -254,14 +258,16 @@ export const TheFlow: React.FC<Props> = ({
                                                 <div className="sd-title-row">
                                                     <div className="sd-title">{app.name}</div>
                                                     <div className="sd-stats">
-                                                        <span className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>
-                                                            + {app.likesCount || 0} -
-                                                        </span>
+                                                        <div className="sd-vote-group">
+                                                            <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
+                                                            <span className="sd-vote-count">{app.likesCount || 0}</span>
+                                                            <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
+                                                        </div>
                                                         <span
                                                             className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
                                                             onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
                                                         >
-                                                            🔖 {savedAppIds.includes(app.id) ? 'Saved' : 'Save'}
+                                                            ★ {savedAppIds.includes(app.id) ? 'Saved' : 'Save'}
                                                         </span>
                                                     </div>
                                                 </div>

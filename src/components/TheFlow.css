@@ -184,20 +184,51 @@
     flex-shrink: 0;
 }
 
-.sd-vote-btn,
-.sd-save-btn,
-.sd-visit-btn {
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 2px 6px;
-    border-radius: 4px;
+.sd-vote-group {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 2px;
 }
 
-.sd-vote-btn:active,
-.sd-save-btn:active,
-.sd-visit-btn:active {
+.sd-vote-btn {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.sd-vote-btn:hover {
     background: rgba(255, 255, 255, 0.1);
-    transform: scale(1.1);
+}
+
+.sd-vote-btn:active {
+    transform: scale(0.95);
+}
+
+.sd-vote-count {
+    padding: 0 4px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.sd-save-btn {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sd-save-btn:active {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
 }
 
 .sd-save-btn.active {

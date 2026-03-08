@@ -265,6 +265,22 @@ export function useApps(userId?: string) {
         }
     };
 
+    const decrementLike = async (id: string) => {
+        setLikesMap(prev => ({
+            ...prev,
+            [id]: (prev[id] || 0) - 1
+        }));
+
+        const currentLikes = likesMap[id] || 0;
+        const { error } = await supabase
+            .from('app_stats')
+            .upsert({ app_id: id, likes: currentLikes - 1 }, { onConflict: 'app_id' });
+
+        if (error) {
+            console.error('Error updating likes:', error);
+        }
+    };
+
     const toggleSave = async (id: string) => {
         const isCurrentlySaved = savedAppIds.includes(id);
 
@@ -301,6 +317,7 @@ export function useApps(userId?: string) {
         removeApp,
         reorder,
         incrementLike,
+        decrementLike,
         toggleSave
     };
 }
