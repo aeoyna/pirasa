@@ -244,34 +244,37 @@ export const TheFlow: React.FC<Props> = ({
                                 <div className="small-detail-card" onClick={() => { setIsDetailOpen(true); setIsSmallDetailOpen(false); }}>
                                     <div className="sd-content">
                                         <div className="sd-left">
-                                            <div className="sd-icon">
-                                                <img src={`https://www.google.com/s2/favicons?sz=128&domain=${new URL(app.url).hostname}`} alt="" />
+                                            <div className="sd-icon-col">
+                                                <div className="sd-icon">
+                                                    <img src={`https://www.google.com/s2/favicons?sz=128&domain=${new URL(app.url).hostname}`} alt="" />
+                                                </div>
+                                                <span className="sd-chip genre-chip">{app.genre || 'Other'}</span>
                                             </div>
                                             <div className="sd-info">
-                                                <div className="sd-title">{app.name}</div>
-                                                <div className="sd-stats">
-                                                    <span className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>
-                                                        + {app.likesCount || 0} -
-                                                    </span>
-                                                    <span
-                                                        className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
-                                                        onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
-                                                    >
-                                                        🔖 {savedAppIds.includes(app.id) ? 'Saved' : 'Save'}
-                                                    </span>
-                                                    <span className="sd-visit-btn" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
-                                                        🌐 Visit
-                                                    </span>
+                                                <div className="sd-title-row">
+                                                    <div className="sd-title">{app.name}</div>
+                                                    <div className="sd-stats">
+                                                        <span className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>
+                                                            + {app.likesCount || 0} -
+                                                        </span>
+                                                        <span
+                                                            className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
+                                                            onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
+                                                        >
+                                                            🔖 {savedAppIds.includes(app.id) ? 'Saved' : 'Save'}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="sd-chips">
-                                                    <span className="sd-chip">{app.genre || 'Other'}</span>
-                                                    {app.merit && <span className="sd-chip">{app.merit}</span>}
-                                                </div>
+                                                {app.merit && (
+                                                    <div className="sd-chips merit-chips">
+                                                        <span className="sd-chip">{app.merit}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="sd-right">
                                             <button className="sd-play-btn" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
-                                                ▶ Play
+                                                🚀 Visit
                                             </button>
                                         </div>
                                     </div>
