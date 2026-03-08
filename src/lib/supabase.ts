@@ -30,5 +30,12 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
             }),
             subscribe: () => ({ unsubscribe: () => { } })
         }),
+        auth: {
+            getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+            onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
+            signInWithPassword: () => Promise.resolve({ data: {}, error: null }),
+            signUp: () => Promise.resolve({ data: {}, error: null }),
+            signOut: () => Promise.resolve({ error: null }),
+        },
         removeChannel: () => { }
     } as any;

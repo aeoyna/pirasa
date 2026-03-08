@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import type { AppMeta } from '../hooks/useApps';
-import { GENRES } from '../hooks/useApps';
+import { type AppMeta, GENRES } from '../hooks/useApps';
+import { useAuth } from '../hooks/useAuth';
 import './TheFlow.css';
 
 const HomeView = () => (
@@ -54,13 +54,12 @@ interface Props {
     apps: AppMeta[];
     deviceId: string;
     savedAppIds: string[];
+    userId?: string;
     onOpenAdmin: () => void;
     onIncrementLike: (id: string) => void;
     onToggleSave: (id: string) => void;
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<void>;
 }
-
-// const SWIPE_THRESHOLD = 40; // Unused
 
 export const TheFlow: React.FC<Props> = ({
     apps,
@@ -73,6 +72,7 @@ export const TheFlow: React.FC<Props> = ({
 }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [isSmallDetailOpen, setIsSmallDetailOpen] = useState(false);
     const [isListOpen, setIsListOpen] = useState(false);
     const [isMyPageOpen, setIsMyPageOpen] = useState(false);
     const [myPageTab, setMyPageTab] = useState<'saved' | 'posts' | 'add'>('saved');
@@ -86,8 +86,7 @@ export const TheFlow: React.FC<Props> = ({
         genre: ''
     });
     const [toast, setToast] = useState<string | null>(null);
-    const [isTabInteracting, setIsTabInteracting] = useState(false);
-    const [tabDragOffset, setTabDragOffset] = useState({ x: 0, y: 0 });
+    const { user, signInWithGoogle, signOut } = useAuth();
 
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
     const isAnimating = useRef(false);
@@ -97,11 +96,8 @@ export const TheFlow: React.FC<Props> = ({
     const total = apps.length;
     const totalRef = useRef(total);
     totalRef.current = total;
-    const tabGestureStart = useRef({ x: 0, y: 0, time: 0 });
-    const lastWheelTime = useRef(0);
-
-    const WHEEL_COOLDOWN = 600;
-    const WHEEL_THRESHOLD = 30;
+    const touchStart = useRef<{ y: number, time: number } | null>(null);
+    const SWIPE_THRESHOLD = 40;
 
     useEffect(() => {
         if (activeIndex >= total && total > 0) setActiveIndex(total - 1);
@@ -120,7 +116,7 @@ export const TheFlow: React.FC<Props> = ({
     };
 
     const handleVote = (type: 'up' | 'down') => {
-        const currentApp = apps[activeIndexRef.current];
+        const currentApp = apps[activeIndex];
         if (!currentApp) return;
         if (type === 'up') {
             onIncrementLike(currentApp.id);
@@ -128,72 +124,73 @@ export const TheFlow: React.FC<Props> = ({
         }
     };
 
-    const onTabStart = (clientX: number, clientY: number) => {
-        tabGestureStart.current = { x: clientX, y: clientY, time: Date.now() };
-        setIsTabInteracting(true);
-        setTabDragOffset({ x: 0, y: 0 });
+    const handleGestureStart = (y: number) => {
+        touchStart.current = { y, time: Date.now() };
     };
 
-    const onTabMove = (clientX: number, clientY: number) => {
-        if (!isTabInteracting) return;
-        const dx = clientX - tabGestureStart.current.x;
-        const dy = clientY - tabGestureStart.current.y;
-        setTabDragOffset({ x: dx, y: dy });
-    };
+    const handleGestureEnd = (y: number) => {
+        if (!touchStart.current) return;
+        const deltaY = y - touchStart.current.y;
+        const deltaTime = Date.now() - touchStart.current.time;
+        touchStart.current = null;
 
-    const onTabEnd = () => {
-        if (!isTabInteracting) return;
-        const dx = tabDragOffset.x;
-        const dy = tabDragOffset.y;
-        setIsTabInteracting(false);
-        setTabDragOffset({ x: 0, y: 0 });
-
-        if (Math.abs(dy) > Math.abs(dx)) {
-            if (dy < -20) goTo(activeIndexRef.current + 1);
-            else if (dy > 20) goTo(activeIndexRef.current - 1);
-        } else {
-            if (dx < -40) setIsListOpen(true);
-            else if (dx > 40) setIsMyPageOpen(true);
-        }
-    };
-
-    const handleWheel = (e: React.WheelEvent) => {
-        const now = Date.now();
-        if (now - lastWheelTime.current < WHEEL_COOLDOWN) return;
-
-        const { deltaX, deltaY } = e;
-
-        if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            // Vertical: Navigation
-            if (Math.abs(deltaY) > WHEEL_THRESHOLD) {
-                if (deltaY > 0) goTo(activeIndexRef.current + 1);
-                else if (deltaY < 0) goTo(activeIndexRef.current - 1);
-                lastWheelTime.current = now;
-            }
-        } else {
-            // Horizontal: List & MyPage
-            if (Math.abs(deltaX) > WHEEL_THRESHOLD) {
-                if (deltaX > 0) setIsListOpen(true);
-                else setIsMyPageOpen(true);
-                lastWheelTime.current = now;
+        if (Math.abs(deltaY) > SWIPE_THRESHOLD && deltaTime < 500) {
+            if (deltaY < 0) {
+                goTo(activeIndexRef.current + 1);
+            } else {
+                goTo(activeIndexRef.current - 1);
             }
         }
     };
 
     useEffect(() => {
-        const moveHandler = (e: MouseEvent) => {
-            if (isTabInteracting) onTabMove(e.clientX, e.clientY);
+        const nav = document.querySelector('.bottom-nav-bar');
+        if (!nav) return;
+
+        const onStart = (e: TouchEvent | MouseEvent) => {
+            const y = 'touches' in e ? e.touches[0].clientY : e.clientY;
+            handleGestureStart(y);
         };
-        const upHandler = () => {
-            if (isTabInteracting) onTabEnd();
+
+        const onEnd = (e: TouchEvent | MouseEvent) => {
+            const y = 'changedTouches' in e ? e.changedTouches[0].clientY : e.clientY;
+            handleGestureEnd(y);
         };
-        window.addEventListener('mousemove', moveHandler);
-        window.addEventListener('mouseup', upHandler);
+
+        let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
+        const onWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            if (isAnimating.current || wheelTimeout) return;
+
+            if (Math.abs(e.deltaY) > 20) {
+                if (e.deltaY > 0) {
+                    goTo(activeIndexRef.current + 1); // scroll down -> next
+                } else {
+                    goTo(activeIndexRef.current - 1); // scroll up -> prev
+                }
+
+                // Debounce wheel events so it doesn't fly through multiple slides
+                wheelTimeout = setTimeout(() => {
+                    wheelTimeout = null;
+                }, 800);
+            }
+        };
+
+        nav.addEventListener('touchstart', onStart as any);
+        nav.addEventListener('mousedown', onStart as any);
+        window.addEventListener('touchend', onEnd as any);
+        window.addEventListener('mouseup', onEnd as any);
+        nav.addEventListener('wheel', onWheel as any, { passive: false });
+
         return () => {
-            window.removeEventListener('mousemove', moveHandler);
-            window.removeEventListener('mouseup', upHandler);
+            nav.removeEventListener('touchstart', onStart as any);
+            nav.removeEventListener('mousedown', onStart as any);
+            window.removeEventListener('touchend', onEnd as any);
+            window.removeEventListener('mouseup', onEnd as any);
+            nav.removeEventListener('wheel', onWheel as any);
+            if (wheelTimeout) clearTimeout(wheelTimeout);
         };
-    }, [isTabInteracting, tabDragOffset]);
+    }, []);
 
     if (total === 0) {
         return (
@@ -206,7 +203,6 @@ export const TheFlow: React.FC<Props> = ({
 
     const currentApp = apps[activeIndex];
 
-    // Safety check: if currentApp is gone (e.g. index sync issue), don't crash the render
     if (total > 0 && !currentApp) {
         return (
             <div className="flow-empty">
@@ -217,12 +213,9 @@ export const TheFlow: React.FC<Props> = ({
     }
 
     return (
-        <div
-            className="flow-root"
-            ref={containerRef}
-        >
+        <div className="flow-root" ref={containerRef}>
             {/* Main Content: Slide Stack */}
-            <div className="view-container">
+            <div className="view-container" onClick={() => setIsSmallDetailOpen(false)}>
                 <div className="slide-stack"
                     style={{
                         transform: `translateY(-${activeIndex * 100}vh)`,
@@ -245,55 +238,76 @@ export const TheFlow: React.FC<Props> = ({
                             ) : (
                                 <div className="slide-placeholder" />
                             )}
+
+                            {/* Small Detail Card */}
+                            {isSmallDetailOpen && app.url !== 'internal:home' && (
+                                <div className="small-detail-card" onClick={() => { setIsDetailOpen(true); setIsSmallDetailOpen(false); }}>
+                                    <div className="sd-content">
+                                        <div className="sd-left">
+                                            <div className="sd-icon">
+                                                <img src={`https://www.google.com/s2/favicons?sz=128&domain=${new URL(app.url).hostname}`} alt="" />
+                                            </div>
+                                            <div className="sd-info">
+                                                <div className="sd-title">{app.name}</div>
+                                                <div className="sd-stats">
+                                                    <span className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>
+                                                        + {app.likesCount || 0} -
+                                                    </span>
+                                                    <span
+                                                        className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
+                                                        onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
+                                                    >
+                                                        🔖 {savedAppIds.includes(app.id) ? 'Saved' : 'Save'}
+                                                    </span>
+                                                    <span className="sd-visit-btn" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
+                                                        🌐 Visit
+                                                    </span>
+                                                </div>
+                                                <div className="sd-chips">
+                                                    <span className="sd-chip">{app.genre || 'Other'}</span>
+                                                    {app.merit && <span className="sd-chip">{app.merit}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="sd-right">
+                                            <button className="sd-play-btn" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
+                                                ▶ Play
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
                     ))}
                 </div>
             </div>
 
 
-            {/* Action-Oriented Tab Bar */}
-            <nav
-                className={`bottom-tab-bar actions ${isTabInteracting ? 'active' : ''}`}
-                onTouchStart={(e) => onTabStart(e.touches[0].clientX, e.touches[0].clientY)}
-                onTouchMove={(e) => onTabMove(e.touches[0].clientX, e.touches[0].clientY)}
-                onTouchEnd={onTabEnd}
-                onMouseDown={(e) => onTabStart(e.clientX, e.clientY)}
-                onWheel={handleWheel}
-            >
-                <button className="tab-item vote-info" onClick={() => setIsDetailOpen(true)}>
-                    <span className="tab-icon">✦</span>
-                    <span className="tab-label">Information</span>
+            {/* Bottom Navigation Bar */}
+            <nav className="bottom-nav-bar">
+                <button className="nav-item" onClick={() => setIsListOpen(true)}>
+                    <span className="nav-icon">🏠</span>
+                    <span className="nav-label">掲示板</span>
                 </button>
-                <button className="tab-item vote-up" onClick={() => handleVote('up')}>
-                    <span className="tab-icon">♥</span>
-                    <span className="tab-label">{currentApp.likesCount || 0} Likes</span>
-                </button>
-                <button className="tab-item vote-comment" onClick={() => showToast('Feature Coming Soon ✒')}>
-                    <span className="tab-icon">✒</span>
-                    <span className="tab-label">Comment</span>
-                </button>
-                <button className="tab-item vote-visit" onClick={() => window.open(currentApp.url, '_blank')}>
-                    <span className="tab-icon">↗</span>
-                    <span className="tab-label">Visit</span>
+                <button className="nav-item" onClick={() => showToast('Search coming soon')}>
+                    <span className="nav-icon">🔍</span>
+                    <span className="nav-label">検索</span>
                 </button>
                 <button
-                    className={`tab-item vote-save ${savedAppIds.includes(currentApp.id) ? 'active' : ''}`}
-                    onClick={() => onToggleSave(currentApp.id)}
+                    className={`nav-item ${isSmallDetailOpen ? 'active' : ''}`}
+                    onClick={() => setIsSmallDetailOpen(!isSmallDetailOpen)}
                 >
-                    <span className="tab-icon">{savedAppIds.includes(currentApp.id) ? '★' : '✥'}</span>
-                    <span className="tab-label">{savedAppIds.includes(currentApp.id) ? 'Saved' : 'Save'}</span>
+                    <span className="nav-icon">📋</span>
+                    <span className="nav-label">詳細</span>
+                </button>
+                <button className="nav-item" onClick={() => setIsMyPageOpen(true)}>
+                    <span className="nav-icon">👤</span>
+                    <span className="nav-label">マイページ</span>
                 </button>
             </nav>
 
-            {/* Toast Feedback */}
             {toast && <div className="pirasa-toast">{toast}</div>}
-
-            {/* Progress dots */}
-            <div className="progress-dots">
-                {apps.map((_, i) => (
-                    <div key={i} className={`dot ${i === activeIndex ? 'dot-active' : ''}`} />
-                ))}
-            </div>
 
             {/* Detail overlay */}
             {isDetailOpen && (
@@ -341,7 +355,6 @@ export const TheFlow: React.FC<Props> = ({
                                 サイトを開く
                             </button>
                         </div>
-
                         <button className="ds-close-light" onClick={() => setIsDetailOpen(false)}>
                             閉じる
                         </button>
@@ -368,14 +381,38 @@ export const TheFlow: React.FC<Props> = ({
                                     }}
                                 >
                                     <div className="app-card-icon">
-                                        {app.url === 'internal:home' ? '🏠' : app.name[0]}
+                                        {app.url === 'internal:home' ? (
+                                            '🏠'
+                                        ) : (
+                                            <img
+                                                src={`https://www.google.com/s2/favicons?sz=64&domain=${new URL(app.url).hostname}`}
+                                                alt={app.name}
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.style.display = 'none';
+                                                    const parent = target.parentElement;
+                                                    if (parent) {
+                                                        parent.innerText = app.name[0].toUpperCase();
+                                                    }
+                                                }}
+                                            />
+                                        )}
                                     </div>
                                     <div className="app-card-info">
-                                        <h3>
-                                            {app.name}
-                                            {app.genre && <span className="app-card-genre">{app.genre}</span>}
-                                        </h3>
-                                        <p>{app.tagline}</p>
+                                        <div className="app-card-text">
+                                            <h3>{app.name}</h3>
+                                            <span className="app-card-category">{app.genre}</span>
+                                            <p>{app.tagline}</p>
+                                        </div>
+                                        <button
+                                            className="app-card-visit-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                window.open(app.url, '_blank');
+                                            }}
+                                        >
+                                            VISIT
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -389,7 +426,22 @@ export const TheFlow: React.FC<Props> = ({
                 <div className="list-overlay" onClick={() => setIsMyPageOpen(false)}>
                     <div className="list-container" onClick={e => e.stopPropagation()}>
                         <div className="list-header">
-                            <h2>マイページ</h2>
+                            <div className="mypage-user-info">
+                                {user ? (
+                                    <div className="user-profile">
+                                        <img src={user.user_metadata.avatar_url} alt="avatar" className="user-avatar" />
+                                        <div className="user-details">
+                                            <span className="user-name">{user.user_metadata.full_name || user.email}</span>
+                                            <button className="logout-btn" onClick={signOut}>ログアウト</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button className="google-login-btn" onClick={signInWithGoogle}>
+                                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" />
+                                        Googleでログイン
+                                    </button>
+                                )}
+                            </div>
                             <button className="list-close" onClick={() => setIsMyPageOpen(false)}>×</button>
                         </div>
                         <div className="mypage-nav">

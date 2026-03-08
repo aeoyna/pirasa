@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { TheFlow } from './components/TheFlow'
 import { AdminPanel } from './components/AdminPanel'
 import { useApps } from './hooks/useApps'
+import { useAuth } from './hooks/useAuth'
 import './App.css'
 
 function App() {
   const [adminOpen, setAdminOpen] = useState(false)
+  const { user } = useAuth()
   const {
     apps,
     loading,
@@ -16,7 +18,7 @@ function App() {
     removeApp,
     incrementLike,
     toggleSave
-  } = useApps()
+  } = useApps(user?.id)
 
   if (loading) {
     return (
@@ -33,6 +35,7 @@ function App() {
         apps={apps}
         deviceId={deviceId}
         savedAppIds={savedAppIds}
+        userId={user?.id}
         onOpenAdmin={() => setAdminOpen(true)}
         onIncrementLike={incrementLike}
         onToggleSave={toggleSave}
