@@ -85,7 +85,7 @@
 /* ─── Small Detail Card ────────────────────────────────── */
 .small-detail-card {
     position: absolute;
-    bottom: calc(95px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(85px + env(safe-area-inset-bottom, 0px));
     /* Above BottomNavBar + Mobile Safe Area */
     left: 15px;
     right: 15px;
