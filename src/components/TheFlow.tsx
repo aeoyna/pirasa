@@ -99,7 +99,7 @@ export const TheFlow: React.FC<Props> = ({
     const totalRef = useRef(total);
     totalRef.current = total;
     const touchStart = useRef<{ y: number, time: number } | null>(null);
-    const SWIPE_THRESHOLD = 40;
+    const SWIPE_THRESHOLD = 60;
 
     useEffect(() => {
         if (activeIndex >= total && total > 0) setActiveIndex(total - 1);
@@ -166,7 +166,7 @@ export const TheFlow: React.FC<Props> = ({
             e.preventDefault();
             if (isAnimating.current || wheelTimeout) return;
 
-            if (Math.abs(e.deltaY) > 20) {
+            if (Math.abs(e.deltaY) > 50) {
                 if (e.deltaY > 0) {
                     goTo(activeIndexRef.current + 1); // scroll down -> next
                 } else {
@@ -176,7 +176,7 @@ export const TheFlow: React.FC<Props> = ({
                 // Debounce wheel events so it doesn't fly through multiple slides
                 wheelTimeout = setTimeout(() => {
                     wheelTimeout = null;
-                }, 800);
+                }, 1000);
             }
         };
 
@@ -222,7 +222,7 @@ export const TheFlow: React.FC<Props> = ({
             <div className="view-container" onClick={() => setIsSmallDetailOpen(false)}>
                 <div className="slide-stack"
                     style={{
-                        transform: `translateY(-${activeIndex * 100}vh)`,
+                        transform: `translateY(-${activeIndex * 100}dvh)`,
                         transition: isAnimating.current ? 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
                     }}
                 >
@@ -243,49 +243,6 @@ export const TheFlow: React.FC<Props> = ({
                                 <div className="slide-placeholder" />
                             )}
 
-                            {/* Small Detail Card */}
-                            {isSmallDetailOpen && app.url !== 'internal:home' && (
-                                <div className="small-detail-card" onClick={() => { setIsDetailOpen(true); setIsSmallDetailOpen(false); }}>
-                                    <div className="sd-content">
-                                        <div className="sd-left">
-                                            <div className="sd-icon-col">
-                                                <div className="sd-icon">
-                                                    <img src={`https://www.google.com/s2/favicons?sz=128&domain=${new URL(app.url).hostname}`} alt="" />
-                                                </div>
-                                                <span className="sd-chip genre-chip">{app.genre || 'Other'}</span>
-                                            </div>
-                                            <div className="sd-info">
-                                                <div className="sd-title-row">
-                                                    <div className="sd-title">{app.name}</div>
-                                                </div>
-                                                {app.merit && (
-                                                    <div className="sd-chips merit-chips">
-                                                        <span className="sd-chip">{app.merit}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="sd-right">
-                                            <div className="sd-stats">
-                                                <div className="sd-vote-group">
-                                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
-                                                    <span className="sd-vote-count">{app.likesCount || 0}</span>
-                                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
-                                                </div>
-                                                <span
-                                                    className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
-                                                    onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
-                                                >
-                                                    ★ {savedAppIds.includes(app.id) ? 'Saved' : 'Save'}
-                                                </span>
-                                            </div>
-                                            <button className="sd-play-btn" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
-                                                🚀 Visit
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
                         </div>
                     ))}
@@ -315,6 +272,57 @@ export const TheFlow: React.FC<Props> = ({
                     <span className="nav-label">マイページ</span>
                 </button>
             </nav>
+
+            {/* Small Detail Card (Root Level) */}
+            {isSmallDetailOpen && currentApp && currentApp.url !== 'internal:home' && (
+                <div
+                    className="small-detail-card"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDetailOpen(true);
+                        setIsSmallDetailOpen(false);
+                    }}
+                >
+                    <div className="sd-content">
+                        <div className="sd-left">
+                            <div className="sd-icon-col">
+                                <div className="sd-icon">
+                                    <img src={`https://www.google.com/s2/favicons?sz=128&domain=${new URL(currentApp.url).hostname}`} alt="" />
+                                </div>
+                                <span className="sd-chip genre-chip">{currentApp.genre || 'Other'}</span>
+                            </div>
+                            <div className="sd-info">
+                                <div className="sd-title-row">
+                                    <div className="sd-title">{currentApp.name}</div>
+                                </div>
+                                {currentApp.merit && (
+                                    <div className="sd-chips merit-chips">
+                                        <span className="sd-chip">{currentApp.merit}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="sd-right">
+                            <div className="sd-stats">
+                                <div className="sd-vote-group">
+                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
+                                    <span className="sd-vote-count">{currentApp.likesCount || 0}</span>
+                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
+                                </div>
+                                <span
+                                    className={`sd-save-btn ${savedAppIds.includes(currentApp.id) ? 'active' : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); onToggleSave(currentApp.id); }}
+                                >
+                                    ★ {savedAppIds.includes(currentApp.id) ? 'Saved' : 'Save'}
+                                </span>
+                            </div>
+                            <button className="sd-play-btn" onClick={(e) => { e.stopPropagation(); window.open(currentApp.url, '_blank'); }}>
+                                🚀 Visit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {toast && <div className="pirasa-toast">{toast}</div>}
 
