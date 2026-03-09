@@ -27,6 +27,7 @@ const SAVED_APPS_KEY = 'pirasa_saved_apps';
 export function useApps(userId?: string) {
     const [apps, setApps] = useState<AppMeta[]>([]);
     const [likesMap, setLikesMap] = useState<{ [id: string]: number }>({});
+    const [userVotesMap, setUserVotesMap] = useState<{ [id: string]: number }>({});
     const [loading, setLoading] = useState(true);
     const [deviceId, setDeviceId] = useState<string>('');
     const [savedAppIds, setSavedAppIds] = useState<string[]>([]);
@@ -64,28 +65,38 @@ export function useApps(userId?: string) {
         localStorage.setItem(SAVED_APPS_KEY, JSON.stringify(savedAppIds));
     }, [savedAppIds]);
 
-    // Fetch user-saved apps from Supabase if logged in
+    // Fetch user-saved apps and votes from Supabase if logged in
     useEffect(() => {
         if (!userId) return;
 
-        const fetchUserSaved = async () => {
+        const fetchUserData = async () => {
             try {
-                const { data, error } = await supabase
+                const { data: savedData, error: savedError } = await supabase
                     .from('user_saved_apps')
                     .select('app_id')
                     .eq('user_id', userId);
 
-                if (!error && data) {
-                    const ids = data.map((r: any) => r.app_id);
-                    // Merge with local if any (migration)
+                if (!savedError && savedData) {
+                    const ids = savedData.map((r: any) => r.app_id);
                     setSavedAppIds(prev => Array.from(new Set([...prev, ...ids])));
                 }
+
+                const { data: votesData, error: votesError } = await supabase
+                    .from('user_votes')
+                    .select('app_id, vote_value')
+                    .eq('user_id', userId);
+
+                if (!votesError && votesData) {
+                    const vMap: { [id: string]: number } = {};
+                    votesData.forEach((r: any) => vMap[r.app_id] = r.vote_value);
+                    setUserVotesMap(vMap);
+                }
             } catch (e) {
-                console.warn('user_saved_apps table might not exist yet');
+                console.warn('User tables might not exist yet');
             }
         };
 
-        fetchUserSaved();
+        fetchUserData();
     }, [userId]);
 
     // Fetch apps from Supabase
@@ -251,36 +262,61 @@ export function useApps(userId?: string) {
         });
     };
 
-    const incrementLike = async (id: string) => {
+    const handleVoteChange = async (id: string, newVote: number) => {
+        if (!userId) return; // Must be logged in to vote with tracking
+
+        const currentVote = userVotesMap[id] || 0;
+        if (currentVote === newVote) return; // No change
+
+        // Optimistic UI updates
+        const statDiff = newVote - currentVote;
+
         setLikesMap(prev => ({
             ...prev,
-            [id]: (prev[id] || 0) + 1
+            [id]: (prev[id] || 0) + statDiff
         }));
 
-        const currentLikes = likesMap[id] || 0;
-        const { error } = await supabase
-            .from('app_stats')
-            .upsert({ app_id: id, likes: currentLikes + 1 }, { onConflict: 'app_id' });
+        setUserVotesMap(prev => ({
+            ...prev,
+            [id]: newVote
+        }));
 
-        if (error) {
-            console.error('Error updating likes:', error);
+        // DB Updates
+        const currentLikes = likesMap[id] || 0;
+
+        if (newVote === 0) {
+            await supabase.from('user_votes').delete().eq('user_id', userId).eq('app_id', id);
+        } else {
+            await supabase.from('user_votes').upsert({ user_id: userId, app_id: id, vote_value: newVote }, { onConflict: 'user_id,app_id' });
         }
+
+        // Sync total stats
+        await supabase.from('app_stats').upsert({ app_id: id, likes: currentLikes + statDiff }, { onConflict: 'app_id' });
+    };
+
+    const incrementLike = async (id: string) => {
+        if (!userId) {
+            // Fallback for anons if you want to allow it, otherwise maybe no-op or notify
+            setLikesMap(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+            const currentLikes = likesMap[id] || 0;
+            await supabase.from('app_stats').upsert({ app_id: id, likes: currentLikes + 1 }, { onConflict: 'app_id' });
+            return;
+        }
+        // If already upvoted, clicking again acts as an UNDO (0)
+        const newVote = userVotesMap[id] === 1 ? 0 : 1;
+        await handleVoteChange(id, newVote);
     };
 
     const decrementLike = async (id: string) => {
-        setLikesMap(prev => ({
-            ...prev,
-            [id]: (prev[id] || 0) - 1
-        }));
-
-        const currentLikes = likesMap[id] || 0;
-        const { error } = await supabase
-            .from('app_stats')
-            .upsert({ app_id: id, likes: currentLikes - 1 }, { onConflict: 'app_id' });
-
-        if (error) {
-            console.error('Error updating likes:', error);
+        if (!userId) {
+            setLikesMap(prev => ({ ...prev, [id]: (prev[id] || 0) - 1 }));
+            const currentLikes = likesMap[id] || 0;
+            await supabase.from('app_stats').upsert({ app_id: id, likes: currentLikes - 1 }, { onConflict: 'app_id' });
+            return;
         }
+        // If already downvoted, clicking again acts as an UNDO (0)
+        const newVote = userVotesMap[id] === -1 ? 0 : -1;
+        await handleVoteChange(id, newVote);
     };
 
     const toggleSave = async (id: string) => {
@@ -320,6 +356,7 @@ export function useApps(userId?: string) {
         reorder,
         incrementLike,
         decrementLike,
-        toggleSave
+        toggleSave,
+        userVotesMap
     };
 }

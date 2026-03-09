@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { type AppMeta, GENRES } from '../hooks/useApps';
-import { useAuth } from '../hooks/useAuth';
+import type { AppMeta } from '../hooks/useApps';
+import { MyPage } from './MyPage';
+import { BBSPanel } from './BBSPanel';
+import { CommentsPanel } from './CommentsPanel';
 import './TheFlow.css';
 
 const MysteryBlock: React.FC = () => (
@@ -72,39 +74,32 @@ interface Props {
     onDecrementLike: (id: string) => void;
     onToggleSave: (id: string) => void;
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<void>;
+    userVotesMap: { [id: string]: number };
 }
 
 export const TheFlow: React.FC<Props> = ({
     apps,
     deviceId,
     savedAppIds,
+    userId,
     onOpenAdmin,
     onIncrementLike,
     onDecrementLike,
     onToggleSave,
-    onAddSite
+    onAddSite,
+    userVotesMap
 }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isSmallDetailOpen, setIsSmallDetailOpen] = useState(false);
     const [isListOpen, setIsListOpen] = useState(false);
-    const [isPostOpen, setIsPostOpen] = useState(false);
     const [isBoardOpen, setIsBoardOpen] = useState(false);
     const [isMyPageOpen, setIsMyPageOpen] = useState(false);
-    const [myPageTab, setMyPageTab] = useState<'saved' | 'posts'>('saved');
-    const [postForm, setPostForm] = useState({
-        name: '',
-        url: '',
-        tagline: '',
-        analysis: ['', '', ''],
-        revenue: '',
-        merit: '',
-        genre: ''
-    });
+    const [myPageTab, setMyPageTab] = useState<'saved' | 'posts' | 'new'>('saved');
+    const [activeCommentAppId, setActiveCommentAppId] = useState<string | null>(null);
     const [toast, setToast] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-    const { user, signInWithGoogle, signOut } = useAuth();
 
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
     const isAnimatingRef = useRef(false);
@@ -306,19 +301,14 @@ export const TheFlow: React.FC<Props> = ({
                                                     </div>
                                                     {app.merit && (
                                                         <div className="sd-chips merit-chips">
-                                                            <span className="sd-chip">{app.merit}</span>
+                                                            <span className="sd-chip merit-text">{app.merit}</span>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
                                             <div className="sd-right">
                                                 <div className="sd-stats">
-                                                    <div className="sd-vote-group">
-                                                        <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
-                                                        <span className="sd-vote-count">{app.likesCount || 0}</span>
-                                                        <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
-                                                    </div>
-                                                    <button className="sd-comment-btn" onClick={(e) => { e.stopPropagation(); showToast(`準備中 💬`); }}>
+                                                    <button className="sd-comment-btn" onClick={(e) => { e.stopPropagation(); setActiveCommentAppId(currentApp.id); }}>
                                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-svg">
                                                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                                         </svg>
@@ -329,10 +319,15 @@ export const TheFlow: React.FC<Props> = ({
                                                     >
                                                         ★
                                                     </span>
+                                                    <button className="sd-visit-btn-small" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
+                                                        🚀
+                                                    </button>
                                                 </div>
-                                                <button className="sd-play-btn" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
-                                                    🚀 Visit
-                                                </button>
+                                                <div className="sd-vote-group">
+                                                    <button className={`sd-vote-btn ${userVotesMap[app.id] === 1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
+                                                    <span className="sd-vote-count">{app.likesCount || 0}</span>
+                                                    <button className={`sd-vote-btn ${userVotesMap[app.id] === -1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -362,7 +357,7 @@ export const TheFlow: React.FC<Props> = ({
                     </svg>
                     <span className="nav-label">掲示板</span>
                 </button>
-                <button className="nav-item post-highlight" onClick={() => setIsPostOpen(true)}>
+                <button className="nav-item post-highlight" onClick={() => { setIsMyPageOpen(true); setMyPageTab('new'); }}>
                     <div className="post-icon-wrapper">
                         <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -449,11 +444,11 @@ export const TheFlow: React.FC<Props> = ({
                         <div className="ds-action-bar">
                             <div className="sd-stats" style={{ width: '100%', justifyContent: 'space-between', padding: '0 8px' }}>
                                 <div className="sd-vote-group">
-                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
+                                    <button className={`sd-vote-btn ${userVotesMap[currentApp.id] === 1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
                                     <span className="sd-vote-count">{currentApp.likesCount || 0}</span>
-                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
+                                    <button className={`sd-vote-btn ${userVotesMap[currentApp.id] === -1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
                                 </div>
-                                <button className="sd-comment-btn" onClick={(e) => { e.stopPropagation(); showToast(`準備中 💬`); }}>
+                                <button className="sd-comment-btn" onClick={(e) => { e.stopPropagation(); setActiveCommentAppId(currentApp.id); }}>
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-svg">
                                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                     </svg>
@@ -549,185 +544,30 @@ export const TheFlow: React.FC<Props> = ({
                 </div>
             )}
 
-            {/* My Page Overlay */}
+            {/* My Page Component */}
             {isMyPageOpen && (
-                <div className="list-overlay" onClick={() => setIsMyPageOpen(false)}>
-                    <div className="list-container" onClick={e => e.stopPropagation()}>
-                        <div className="list-header">
-                            <div className="mypage-user-info">
-                                {user ? (
-                                    <div className="user-profile">
-                                        <img src={user.user_metadata.avatar_url} alt="avatar" className="user-avatar" />
-                                        <div className="user-details">
-                                            <span className="user-name">{user.user_metadata.full_name || user.email}</span>
-                                            <button className="logout-btn" onClick={signOut}>ログアウト</button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <button className="google-login-btn" onClick={signInWithGoogle}>
-                                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" />
-                                        Googleでログイン
-                                    </button>
-                                )}
-                            </div>
-                            <button className="list-close" onClick={() => setIsMyPageOpen(false)}>×</button>
-                        </div>
-                        <div className="mypage-nav">
-                            <button
-                                className={`mypage-tab-btn ${myPageTab === 'saved' ? 'active' : ''}`}
-                                onClick={() => setMyPageTab('saved')}
-                            >
-                                保存済み
-                            </button>
-                            <button
-                                className={`mypage-tab-btn ${myPageTab === 'posts' ? 'active' : ''}`}
-                                onClick={() => setMyPageTab('posts')}
-                            >
-                                自分の投稿
-                            </button>
-                        </div>
-
-                        <div className="mypage-scroll-area">
-                            {myPageTab === 'saved' && (
-                                <div className="app-grid">
-                                    {apps.filter(a => savedAppIds.includes(a.id)).length === 0 ? (
-                                        <p className="empty-msg">保存したサイトはありません。</p>
-                                    ) : (
-                                        apps.filter(a => savedAppIds.includes(a.id)).map((app) => (
-                                            <div key={app.id} className="app-card" onClick={() => {
-                                                const idx = apps.findIndex(a => a.id === app.id);
-                                                if (idx !== -1) {
-                                                    goTo(idx);
-                                                    setIsMyPageOpen(false);
-                                                }
-                                            }}>
-                                                <div className="app-card-icon">{app.name[0]}</div>
-                                                <div className="app-card-info">
-                                                    <h3>{app.name}</h3>
-                                                    <p>{app.tagline}</p>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            )}
-
-                            {myPageTab === 'posts' && (
-                                <div className="app-grid">
-                                    {apps.filter(a => a.created_by === deviceId).length === 0 ? (
-                                        <p className="empty-msg">まだ投稿していません。</p>
-                                    ) : (
-                                        apps.filter(a => a.created_by === deviceId).map((app) => (
-                                            <div key={app.id} className="app-card">
-                                                <div className="app-card-icon">{app.name[0]}</div>
-                                                <div className="app-card-info">
-                                                    <h3>{app.name}</h3>
-                                                    <p>{app.likesCount || 0} Likes</p>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            )}
-
-                        </div>
-
-                        <div className="mypage-footer">
-                            <p>Device ID: {deviceId}</p>
-                            <p onDoubleClick={onOpenAdmin} style={{ cursor: 'pointer', opacity: 0.3 }}>Admin</p>
-                        </div>
-                    </div>
-                </div>
+                <MyPage
+                    initialTab={myPageTab}
+                    onClose={() => setIsMyPageOpen(false)}
+                    savedApps={apps.filter(a => savedAppIds.includes(a.id))}
+                    myPostedApps={apps.filter(a => a.created_by === deviceId || (userId && a.created_by === userId))}
+                    onAddSite={async (appData) => {
+                        await onAddSite(appData);
+                        showToast('Site posted! 🚀');
+                    }}
+                />
             )}
 
-            {/* Post Overlay */}
-            {isPostOpen && (
-                <div className="list-overlay" onClick={() => setIsPostOpen(false)}>
-                    <div className="list-container" onClick={e => e.stopPropagation()}>
-                        <div className="list-header">
-                            <h2>新規投稿</h2>
-                            <button className="list-close" onClick={() => setIsPostOpen(false)}>×</button>
-                        </div>
-                        <form className="mypage-form" onSubmit={async (e) => {
-                            e.preventDefault();
-                            await onAddSite({
-                                ...postForm,
-                                analysis: postForm.analysis.filter(a => a.trim() !== '')
-                            });
-                            setPostForm({
-                                name: '',
-                                url: '',
-                                tagline: '',
-                                analysis: ['', '', ''],
-                                revenue: '',
-                                merit: '',
-                                genre: ''
-                            });
-                            setIsPostOpen(false);
-                            setIsMyPageOpen(true);
-                            setMyPageTab('posts');
-                            showToast('Site posted! 🚀');
-                        }}>
-                            <div className="form-group">
-                                <label>サイト名 *</label>
-                                <input
-                                    value={postForm.name}
-                                    onChange={e => setPostForm({ ...postForm, name: e.target.value })}
-                                    required
-                                    placeholder="例: Saturn"
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>URL *</label>
-                                <input
-                                    value={postForm.url}
-                                    onChange={e => setPostForm({ ...postForm, url: e.target.value })}
-                                    required
-                                    placeholder="https://..."
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>キャッチコピー</label>
-                                <input
-                                    value={postForm.tagline}
-                                    onChange={e => setPostForm({ ...postForm, tagline: e.target.value })}
-                                    placeholder="AIが動くExcel..."
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>ジャンル *</label>
-                                <select
-                                    value={postForm.genre}
-                                    onChange={e => setPostForm({ ...postForm, genre: e.target.value })}
-                                    required
-                                >
-                                    <option value="">選択してください</option>
-                                    {GENRES.map(g => (
-                                        <option key={g} value={g}>{g}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button type="submit" className="form-submit-btn">サイトを投稿する</button>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Board Overlay */}
+            {isBoardOpen && <BBSPanel onClose={() => setIsBoardOpen(false)} />}
 
-            {/* Board Overlay (Placeholder) */}
-            {isBoardOpen && (
-                <div className="list-overlay" onClick={() => setIsBoardOpen(false)}>
-                    <div className="list-container" onClick={e => e.stopPropagation()}>
-                        <div className="list-header">
-                            <h2>掲示板</h2>
-                            <button className="list-close" onClick={() => setIsBoardOpen(false)}>×</button>
-                        </div>
-                        <div className="board-placeholder">
-                            <div className="bp-icon">📡</div>
-                            <h3>コミュニティ・フィード</h3>
-                            <p>話題のサイトや最新の投稿がここに表示されます。準備中です！</p>
-                        </div>
-                    </div>
-                </div>
+            {/* Comments Overlay */}
+            {activeCommentAppId && (
+                <CommentsPanel
+                    appId={activeCommentAppId}
+                    appName={apps.find(a => a.id === activeCommentAppId)?.name || 'アプリ'}
+                    onClose={() => setActiveCommentAppId(null)}
+                />
             )}
         </div>
     );

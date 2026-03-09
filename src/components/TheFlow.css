@@ -210,12 +210,16 @@
 }
 
 .sd-title {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #fff;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.3;
+    padding-top: 10px;
 }
 
 .sd-stats {
@@ -395,6 +399,21 @@
     min-width: 0;
 }
 
+.merit-text {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+    margin-top: 15px;
+    width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    flex-shrink: 1 !important;
+}
+
 .genre-chip {
     background: rgba(212, 175, 55, 0.2);
     /* chic accent with opacity */
@@ -436,6 +455,26 @@
 }
 
 .sd-play-btn:active {
+    transform: scale(0.95);
+}
+
+.sd-visit-btn-small {
+    background: #a020f0;
+    color: #fff;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(160, 32, 240, 0.4);
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sd-visit-btn-small:active {
     transform: scale(0.95);
 }
 

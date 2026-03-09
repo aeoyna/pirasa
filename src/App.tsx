@@ -18,7 +18,8 @@ function App() {
     removeApp,
     incrementLike,
     decrementLike,
-    toggleSave
+    toggleSave,
+    userVotesMap
   } = useApps(user?.id)
 
   if (loading) {
@@ -42,6 +43,7 @@ function App() {
         onDecrementLike={decrementLike}
         onToggleSave={toggleSave}
         onAddSite={addApp}
+        userVotesMap={userVotesMap}
       />
       {adminOpen && (
         <AdminPanel
