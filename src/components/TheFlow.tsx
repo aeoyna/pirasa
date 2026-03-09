@@ -3,6 +3,18 @@ import { type AppMeta, GENRES } from '../hooks/useApps';
 import { useAuth } from '../hooks/useAuth';
 import './TheFlow.css';
 
+const MysteryBlock: React.FC = () => (
+    <div className="mystery-block">
+        <span className="mystery-question">?</span>
+        <div className="block-dots">
+            <span className="dot tl"></span>
+            <span className="dot tr"></span>
+            <span className="dot bl"></span>
+            <span className="dot br"></span>
+        </div>
+    </div>
+);
+
 const HomeView = () => (
     <div className="home-view">
         <div className="home-content">
@@ -73,11 +85,14 @@ export const TheFlow: React.FC<Props> = ({
     onAddSite
 }) => {
     const [activeIndex, setActiveIndex] = useState(0);
+    const [isAnimating, setIsAnimating] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isSmallDetailOpen, setIsSmallDetailOpen] = useState(false);
     const [isListOpen, setIsListOpen] = useState(false);
+    const [isPostOpen, setIsPostOpen] = useState(false);
+    const [isBoardOpen, setIsBoardOpen] = useState(false);
     const [isMyPageOpen, setIsMyPageOpen] = useState(false);
-    const [myPageTab, setMyPageTab] = useState<'saved' | 'posts' | 'add'>('saved');
+    const [myPageTab, setMyPageTab] = useState<'saved' | 'posts'>('saved');
     const [postForm, setPostForm] = useState({
         name: '',
         url: '',
@@ -88,12 +103,16 @@ export const TheFlow: React.FC<Props> = ({
         genre: ''
     });
     const [toast, setToast] = useState<string | null>(null);
+    const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
     const { user, signInWithGoogle, signOut } = useAuth();
 
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
-    const isAnimating = useRef(false);
-    const activeIndexRef = useRef(activeIndex);
-    activeIndexRef.current = activeIndex;
+    const isAnimatingRef = useRef(false);
+    const appsRef = useRef(apps);
+    appsRef.current = apps;
+    const resolvedActiveIndex = Math.min(activeIndex, Math.max(0, apps.length - 1));
+    const activeIndexRef = useRef(resolvedActiveIndex);
+    activeIndexRef.current = resolvedActiveIndex;
     const containerRef = useRef<HTMLDivElement>(null);
     const total = apps.length;
     const totalRef = useRef(total);
@@ -106,10 +125,15 @@ export const TheFlow: React.FC<Props> = ({
     }, [total, activeIndex]);
 
     const goTo = useCallback((nextIndex: number) => {
-        if (nextIndex < 0 || nextIndex >= totalRef.current || isAnimating.current) return;
-        isAnimating.current = true;
+        if (nextIndex < 0 || nextIndex >= totalRef.current || isAnimatingRef.current) return;
+        isAnimatingRef.current = true;
+        setIsAnimating(true);
         setActiveIndex(nextIndex);
-        setTimeout(() => { isAnimating.current = false; }, 450);
+        setIsSmallDetailOpen(true);
+        setTimeout(() => {
+            isAnimatingRef.current = false;
+            setIsAnimating(false);
+        }, 500);
     }, []);
 
     const showToast = (msg: string) => {
@@ -118,7 +142,7 @@ export const TheFlow: React.FC<Props> = ({
     };
 
     const handleVote = (type: 'up' | 'down') => {
-        const currentApp = apps[activeIndex];
+        const currentApp = apps[resolvedActiveIndex];
         if (!currentApp) return;
         if (type === 'up') {
             onIncrementLike(currentApp.id);
@@ -148,8 +172,10 @@ export const TheFlow: React.FC<Props> = ({
     };
 
     useEffect(() => {
-        const nav = document.querySelector('.bottom-nav-bar');
-        if (!nav) return;
+        const nav = containerRef.current?.querySelector('.bottom-nav-bar');
+        const view = containerRef.current?.querySelector('.view-container');
+        const gestureTargets = Array.from(new Set([nav, view].filter(Boolean))) as Element[];
+        if (gestureTargets.length === 0) return;
 
         const onStart = (e: TouchEvent | MouseEvent) => {
             const y = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -164,34 +190,37 @@ export const TheFlow: React.FC<Props> = ({
         let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
         const onWheel = (e: WheelEvent) => {
             e.preventDefault();
-            if (isAnimating.current || wheelTimeout) return;
+            if (isAnimatingRef.current || wheelTimeout) return;
 
             if (Math.abs(e.deltaY) > 50) {
                 if (e.deltaY > 0) {
-                    goTo(activeIndexRef.current + 1); // scroll down -> next
+                    goTo(activeIndexRef.current + 1);
                 } else {
-                    goTo(activeIndexRef.current - 1); // scroll up -> prev
+                    goTo(activeIndexRef.current - 1);
                 }
 
-                // Debounce wheel events so it doesn't fly through multiple slides
                 wheelTimeout = setTimeout(() => {
                     wheelTimeout = null;
-                }, 1000);
+                }, 600);
             }
         };
 
-        nav.addEventListener('touchstart', onStart as any);
-        nav.addEventListener('mousedown', onStart as any);
+        gestureTargets.forEach(target => {
+            target.addEventListener('touchstart', onStart as any);
+            target.addEventListener('mousedown', onStart as any);
+            target.addEventListener('wheel', onWheel as any, { passive: false });
+        });
         window.addEventListener('touchend', onEnd as any);
         window.addEventListener('mouseup', onEnd as any);
-        nav.addEventListener('wheel', onWheel as any, { passive: false });
 
         return () => {
-            nav.removeEventListener('touchstart', onStart as any);
-            nav.removeEventListener('mousedown', onStart as any);
+            gestureTargets.forEach(target => {
+                target.removeEventListener('touchstart', onStart as any);
+                target.removeEventListener('mousedown', onStart as any);
+                target.removeEventListener('wheel', onWheel as any);
+            });
             window.removeEventListener('touchend', onEnd as any);
             window.removeEventListener('mouseup', onEnd as any);
-            nav.removeEventListener('wheel', onWheel as any);
             if (wheelTimeout) clearTimeout(wheelTimeout);
         };
     }, []);
@@ -205,9 +234,9 @@ export const TheFlow: React.FC<Props> = ({
         );
     }
 
-    const currentApp = apps[activeIndex];
+    const currentApp = apps[resolvedActiveIndex];
 
-    if (total > 0 && !currentApp) {
+    if (!currentApp) {
         return (
             <div className="flow-empty">
                 <p>サイトを読み込んでいます...</p>
@@ -222,28 +251,93 @@ export const TheFlow: React.FC<Props> = ({
             <div className="view-container" onClick={() => setIsSmallDetailOpen(false)}>
                 <div className="slide-stack"
                     style={{
-                        transform: `translateY(-${activeIndex * 100}dvh)`,
-                        transition: isAnimating.current ? 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
+                        transform: `translateY(-${resolvedActiveIndex * 100}dvh)`,
+                        transition: isAnimating ? 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
                     }}
                 >
                     {apps.map((app, index) => (
                         <div key={app.id} className="slide">
                             {app.url === 'internal:home' ? (
                                 <HomeView />
-                            ) : Math.abs(index - activeIndex) <= 1 ? (
+                            ) : Math.abs(index - resolvedActiveIndex) <= 1 ? (
                                 <iframe
                                     ref={el => { iframeRefs.current[app.id] = el; }}
                                     src={app.url}
                                     title={app.name}
                                     className="app-iframe"
-                                    loading={index === activeIndex ? 'eager' : 'lazy'}
+                                    loading={index === resolvedActiveIndex ? 'eager' : 'lazy'}
                                     allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                 />
                             ) : (
                                 <div className="slide-placeholder" />
                             )}
 
-
+                            {/* Small Detail Card (Scoped to Slide to animate with it) */}
+                            {isSmallDetailOpen && app.url !== 'internal:home' && (
+                                <>
+                                    <div className="sd-overlay" onClick={(e) => { e.stopPropagation(); setIsSmallDetailOpen(false); }} />
+                                    <div
+                                        className="small-detail-card"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsDetailOpen(true);
+                                            setIsSmallDetailOpen(false);
+                                        }}
+                                    >
+                                        <div className="sd-content">
+                                            <div className="sd-left">
+                                                <div className="sd-icon-col">
+                                                    <div className="sd-icon">
+                                                        {imageErrors.has(app.id) ? (
+                                                            <MysteryBlock />
+                                                        ) : (
+                                                            <img
+                                                                src={`https://www.google.com/s2/favicons?sz=128&domain=${new URL(app.url).hostname}`}
+                                                                alt=""
+                                                                onError={() => setImageErrors(prev => new Set(prev).add(app.id))}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <span className="sd-chip genre-chip">{app.genre || 'Other'}</span>
+                                                </div>
+                                                <div className="sd-info">
+                                                    <div className="sd-title-row">
+                                                        <div className="sd-title">{app.name}</div>
+                                                    </div>
+                                                    {app.merit && (
+                                                        <div className="sd-chips merit-chips">
+                                                            <span className="sd-chip">{app.merit}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="sd-right">
+                                                <div className="sd-stats">
+                                                    <div className="sd-vote-group">
+                                                        <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
+                                                        <span className="sd-vote-count">{app.likesCount || 0}</span>
+                                                        <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
+                                                    </div>
+                                                    <button className="sd-comment-btn" onClick={(e) => { e.stopPropagation(); showToast(`準備中 💬`); }}>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-svg">
+                                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <span
+                                                        className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
+                                                        onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
+                                                    >
+                                                        ★
+                                                    </span>
+                                                </div>
+                                                <button className="sd-play-btn" onClick={(e) => { e.stopPropagation(); window.open(app.url, '_blank'); }}>
+                                                    🚀 Visit
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -253,76 +347,52 @@ export const TheFlow: React.FC<Props> = ({
             {/* Bottom Navigation Bar */}
             <nav className="bottom-nav-bar">
                 <button className="nav-item" onClick={() => setIsListOpen(true)}>
-                    <span className="nav-icon">🏠</span>
+                    <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span className="nav-label">検索</span>
+                </button>
+                <button className="nav-item" onClick={() => setIsBoardOpen(true)}>
+                    <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
                     <span className="nav-label">掲示板</span>
                 </button>
-                <button className="nav-item" onClick={() => showToast('Search coming soon')}>
-                    <span className="nav-icon">🔍</span>
-                    <span className="nav-label">検索</span>
+                <button className="nav-item post-highlight" onClick={() => setIsPostOpen(true)}>
+                    <div className="post-icon-wrapper">
+                        <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </div>
+                    <span className="nav-label">投稿</span>
                 </button>
                 <button
                     className={`nav-item ${isSmallDetailOpen ? 'active' : ''}`}
-                    onClick={() => setIsSmallDetailOpen(!isSmallDetailOpen)}
+                    onClick={() => setIsSmallDetailOpen(true)}
                 >
-                    <span className="nav-icon">📋</span>
+                    <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
                     <span className="nav-label">詳細</span>
                 </button>
-                <button className="nav-item" onClick={() => setIsMyPageOpen(true)}>
-                    <span className="nav-icon">👤</span>
+                <button className="nav-item" onClick={() => { setIsMyPageOpen(true); setMyPageTab('saved'); }}>
+                    <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
                     <span className="nav-label">マイページ</span>
                 </button>
             </nav>
 
-            {/* Small Detail Card (Root Level) */}
-            {isSmallDetailOpen && currentApp && currentApp.url !== 'internal:home' && (
-                <div
-                    className="small-detail-card"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setIsDetailOpen(true);
-                        setIsSmallDetailOpen(false);
-                    }}
-                >
-                    <div className="sd-content">
-                        <div className="sd-left">
-                            <div className="sd-icon-col">
-                                <div className="sd-icon">
-                                    <img src={`https://www.google.com/s2/favicons?sz=128&domain=${new URL(currentApp.url).hostname}`} alt="" />
-                                </div>
-                                <span className="sd-chip genre-chip">{currentApp.genre || 'Other'}</span>
-                            </div>
-                            <div className="sd-info">
-                                <div className="sd-title-row">
-                                    <div className="sd-title">{currentApp.name}</div>
-                                </div>
-                                {currentApp.merit && (
-                                    <div className="sd-chips merit-chips">
-                                        <span className="sd-chip">{currentApp.merit}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="sd-right">
-                            <div className="sd-stats">
-                                <div className="sd-vote-group">
-                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
-                                    <span className="sd-vote-count">{currentApp.likesCount || 0}</span>
-                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
-                                </div>
-                                <span
-                                    className={`sd-save-btn ${savedAppIds.includes(currentApp.id) ? 'active' : ''}`}
-                                    onClick={(e) => { e.stopPropagation(); onToggleSave(currentApp.id); }}
-                                >
-                                    ★ {savedAppIds.includes(currentApp.id) ? 'Saved' : 'Save'}
-                                </span>
-                            </div>
-                            <button className="sd-play-btn" onClick={(e) => { e.stopPropagation(); window.open(currentApp.url, '_blank'); }}>
-                                🚀 Visit
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {toast && <div className="pirasa-toast">{toast}</div>}
 
@@ -331,32 +401,34 @@ export const TheFlow: React.FC<Props> = ({
                 <div className="detail-overlay" onClick={() => setIsDetailOpen(false)}>
                     <div className="detail-sheet" onClick={e => e.stopPropagation()}>
                         <div className="pull-bar" />
-                        <p className="ds-eyebrow">{currentApp.tagline}</p>
-                        <h1 className="ds-name">
-                            {currentApp.name}
-                            {currentApp.genre && <span className="ds-genre-tag">{currentApp.genre}</span>}
-                        </h1>
-                        <p className="ds-section-title">pirasa の目利き</p>
-                        <div className="ds-analysis">
-                            {currentApp.analysis.map((line, i) => (
-                                <div key={i} className="ds-analysis-line">{line}</div>
-                            ))}
-                        </div>
-                        <div className="ds-chips">
-                            {currentApp.revenue && (
-                                <div className="ds-chip">
-                                    <label>収益モデル</label>
-                                    <span>{currentApp.revenue}</span>
+
+                        <button className="ds-close-btn" onClick={() => setIsDetailOpen(false)}>
+                            ×
+                        </button>
+
+                        {/* Unified Header */}
+                        <div className="ds-header">
+                            <div className="ds-icon-col">
+                                <div className="ds-icon">
+                                    {imageErrors.has(currentApp.id) ? (
+                                        <MysteryBlock />
+                                    ) : (
+                                        <img
+                                            src={`https://www.google.com/s2/favicons?sz=128&domain=${new URL(currentApp.url).hostname}`}
+                                            alt=""
+                                            onError={() => setImageErrors(prev => new Set(prev).add(currentApp.id))}
+                                        />
+                                    )}
                                 </div>
-                            )}
-                            {currentApp.merit && (
-                                <div className="ds-chip">
-                                    <label>生存戦略</label>
-                                    <span>{currentApp.merit}</span>
-                                </div>
-                            )}
+                                <span className="ds-genre-chip">{currentApp.genre || 'Other'}</span>
+                            </div>
+                            <div className="ds-info">
+                                <p className="ds-eyebrow">{currentApp.tagline}</p>
+                                <h1 className="ds-name">{currentApp.name}</h1>
+                            </div>
                         </div>
 
+                        {/* Top Action Buttons (Reload / Visit) */}
                         <div className="ds-actions-grid">
                             <button className="ds-btn-secondary" onClick={() => {
                                 if (iframeRefs.current[currentApp.id]) {
@@ -364,17 +436,60 @@ export const TheFlow: React.FC<Props> = ({
                                     setIsDetailOpen(false);
                                 }
                             }}>
-                                サイトを再読み込み
+                                サイト再読込
                             </button>
-                            <button className="ds-btn-primary" onClick={() => {
+                            <button className="sd-play-btn ds-visit-btn" onClick={() => {
                                 window.open(currentApp.url, '_blank');
                             }}>
-                                サイトを開く
+                                🚀 Visit
                             </button>
                         </div>
-                        <button className="ds-close-light" onClick={() => setIsDetailOpen(false)}>
-                            閉じる
-                        </button>
+
+                        {/* Action Buttons Unified */}
+                        <div className="ds-action-bar">
+                            <div className="sd-stats" style={{ width: '100%', justifyContent: 'space-between', padding: '0 8px' }}>
+                                <div className="sd-vote-group">
+                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
+                                    <span className="sd-vote-count">{currentApp.likesCount || 0}</span>
+                                    <button className="sd-vote-btn" onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
+                                </div>
+                                <button className="sd-comment-btn" onClick={(e) => { e.stopPropagation(); showToast(`準備中 💬`); }}>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-svg">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                </button>
+                                <span
+                                    className={`sd-save-btn ${savedAppIds.includes(currentApp.id) ? 'active' : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); onToggleSave(currentApp.id); }}
+                                >
+                                    ★
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Analysis Content */}
+                        <div className="ds-content-section">
+                            <p className="ds-section-title">pirasa の目利き</p>
+                            <div className="ds-analysis">
+                                {currentApp.analysis.map((line, i) => (
+                                    <div key={i} className="ds-analysis-line">{line}</div>
+                                ))}
+                            </div>
+                            <div className="ds-chips">
+                                {currentApp.revenue && (
+                                    <div className="ds-chip">
+                                        <label>収益モデル</label>
+                                        <span>{currentApp.revenue}</span>
+                                    </div>
+                                )}
+                                {currentApp.merit && (
+                                    <div className="ds-chip">
+                                        <label>生存戦略</label>
+                                        <span>{currentApp.merit}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -384,34 +499,30 @@ export const TheFlow: React.FC<Props> = ({
                 <div className="list-overlay" onClick={() => setIsListOpen(false)}>
                     <div className="list-container" onClick={e => e.stopPropagation()}>
                         <div className="list-header">
-                            <h2>サイト一覧</h2>
+                            <h2>サイト検索</h2>
                             <button className="list-close" onClick={() => setIsListOpen(false)}>×</button>
+                        </div>
+                        <div className="search-box-container">
+                            <input type="text" className="search-input" placeholder="例: Saturn, AI, Excel..." />
                         </div>
                         <div className="app-grid">
                             {apps.map((app, index) => (
                                 <div
                                     key={app.id}
-                                    className={`app-card ${index === activeIndex ? 'active' : ''}`}
+                                    className={`app-card ${index === resolvedActiveIndex ? 'active' : ''}`}
                                     onClick={() => {
                                         goTo(index);
                                         setIsListOpen(false);
                                     }}
                                 >
                                     <div className="app-card-icon">
-                                        {app.url === 'internal:home' ? (
-                                            '🏠'
+                                        {app.url === 'internal:home' || imageErrors.has(app.id) ? (
+                                            <MysteryBlock />
                                         ) : (
                                             <img
                                                 src={`https://www.google.com/s2/favicons?sz=64&domain=${new URL(app.url).hostname}`}
                                                 alt={app.name}
-                                                onError={(e) => {
-                                                    const target = e.target as HTMLImageElement;
-                                                    target.style.display = 'none';
-                                                    const parent = target.parentElement;
-                                                    if (parent) {
-                                                        parent.innerText = app.name[0].toUpperCase();
-                                                    }
-                                                }}
+                                                onError={() => setImageErrors(prev => new Set(prev).add(app.id))}
                                             />
                                         )}
                                     </div>
@@ -474,12 +585,6 @@ export const TheFlow: React.FC<Props> = ({
                             >
                                 自分の投稿
                             </button>
-                            <button
-                                className={`mypage-tab-btn ${myPageTab === 'add' ? 'active' : ''}`}
-                                onClick={() => setMyPageTab('add')}
-                            >
-                                サイトを推薦
-                            </button>
                         </div>
 
                         <div className="mypage-scroll-area">
@@ -525,72 +630,101 @@ export const TheFlow: React.FC<Props> = ({
                                 </div>
                             )}
 
-                            {myPageTab === 'add' && (
-                                <form className="mypage-form" onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    await onAddSite({
-                                        ...postForm,
-                                        analysis: postForm.analysis.filter(a => a.trim() !== '')
-                                    });
-                                    setPostForm({
-                                        name: '',
-                                        url: '',
-                                        tagline: '',
-                                        analysis: ['', '', ''],
-                                        revenue: '',
-                                        merit: '',
-                                        genre: ''
-                                    });
-                                    setMyPageTab('posts');
-                                    showToast('Site posted! 🚀');
-                                }}>
-                                    <div className="form-group">
-                                        <label>サイト名 *</label>
-                                        <input
-                                            value={postForm.name}
-                                            onChange={e => setPostForm({ ...postForm, name: e.target.value })}
-                                            required
-                                            placeholder="例: Saturn"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>URL *</label>
-                                        <input
-                                            value={postForm.url}
-                                            onChange={e => setPostForm({ ...postForm, url: e.target.value })}
-                                            required
-                                            placeholder="https://..."
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>キャッチコピー</label>
-                                        <input
-                                            value={postForm.tagline}
-                                            onChange={e => setPostForm({ ...postForm, tagline: e.target.value })}
-                                            placeholder="AIが動くExcel..."
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>ジャンル *</label>
-                                        <select
-                                            value={postForm.genre}
-                                            onChange={e => setPostForm({ ...postForm, genre: e.target.value })}
-                                            required
-                                        >
-                                            <option value="">選択してください</option>
-                                            {GENRES.map(g => (
-                                                <option key={g} value={g}>{g}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <button type="submit" className="form-submit-btn">投稿する</button>
-                                </form>
-                            )}
                         </div>
 
                         <div className="mypage-footer">
                             <p>Device ID: {deviceId}</p>
                             <p onDoubleClick={onOpenAdmin} style={{ cursor: 'pointer', opacity: 0.3 }}>Admin</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Post Overlay */}
+            {isPostOpen && (
+                <div className="list-overlay" onClick={() => setIsPostOpen(false)}>
+                    <div className="list-container" onClick={e => e.stopPropagation()}>
+                        <div className="list-header">
+                            <h2>新規投稿</h2>
+                            <button className="list-close" onClick={() => setIsPostOpen(false)}>×</button>
+                        </div>
+                        <form className="mypage-form" onSubmit={async (e) => {
+                            e.preventDefault();
+                            await onAddSite({
+                                ...postForm,
+                                analysis: postForm.analysis.filter(a => a.trim() !== '')
+                            });
+                            setPostForm({
+                                name: '',
+                                url: '',
+                                tagline: '',
+                                analysis: ['', '', ''],
+                                revenue: '',
+                                merit: '',
+                                genre: ''
+                            });
+                            setIsPostOpen(false);
+                            setIsMyPageOpen(true);
+                            setMyPageTab('posts');
+                            showToast('Site posted! 🚀');
+                        }}>
+                            <div className="form-group">
+                                <label>サイト名 *</label>
+                                <input
+                                    value={postForm.name}
+                                    onChange={e => setPostForm({ ...postForm, name: e.target.value })}
+                                    required
+                                    placeholder="例: Saturn"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>URL *</label>
+                                <input
+                                    value={postForm.url}
+                                    onChange={e => setPostForm({ ...postForm, url: e.target.value })}
+                                    required
+                                    placeholder="https://..."
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>キャッチコピー</label>
+                                <input
+                                    value={postForm.tagline}
+                                    onChange={e => setPostForm({ ...postForm, tagline: e.target.value })}
+                                    placeholder="AIが動くExcel..."
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>ジャンル *</label>
+                                <select
+                                    value={postForm.genre}
+                                    onChange={e => setPostForm({ ...postForm, genre: e.target.value })}
+                                    required
+                                >
+                                    <option value="">選択してください</option>
+                                    {GENRES.map(g => (
+                                        <option key={g} value={g}>{g}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button type="submit" className="form-submit-btn">サイトを投稿する</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Board Overlay (Placeholder) */}
+            {isBoardOpen && (
+                <div className="list-overlay" onClick={() => setIsBoardOpen(false)}>
+                    <div className="list-container" onClick={e => e.stopPropagation()}>
+                        <div className="list-header">
+                            <h2>掲示板</h2>
+                            <button className="list-close" onClick={() => setIsBoardOpen(false)}>×</button>
+                        </div>
+                        <div className="board-placeholder">
+                            <div className="bp-icon">📡</div>
+                            <h3>コミュニティ・フィード</h3>
+                            <p>話題のサイトや最新の投稿がここに表示されます。準備中です！</p>
                         </div>
                     </div>
                 </div>

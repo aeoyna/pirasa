@@ -192,11 +192,13 @@ export function useApps(userId?: string) {
         likesCount: likesMap[app.id] || 0
     }));
 
+    // Keep stable order: Home first, then insertion order.
+    // DO NOT sort by likesCount here — it would cause activeIndex to point
+    // to a different app after every vote, making counts appear not to change.
     const sortedApps = appsWithLikes.sort((a, b) => {
-        // Special case for Home slide if its URL is internal:home
         if (a.url === 'internal:home') return -1;
         if (b.url === 'internal:home') return 1;
-        return (b.likesCount || 0) - (a.likesCount || 0);
+        return 0; // preserve insertion order for all other apps
     });
 
     const addApp = async (app: Omit<AppMeta, 'id'>) => {
