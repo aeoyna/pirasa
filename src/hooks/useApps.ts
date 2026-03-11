@@ -99,11 +99,11 @@ export function useApps(userId?: string) {
         fetchUserData();
     }, [userId]);
 
-    // Fetch apps from Supabase
+    // Fetch apps from Supabase (catalog)
     const fetchApps = useCallback(async () => {
         try {
             const { data, error } = await supabase
-                .from('user_saved_apps')
+                .from('apps')
                 .select('*')
                 .order('created_at', { ascending: false });
 
@@ -178,8 +178,8 @@ export function useApps(userId?: string) {
                 .subscribe();
 
             const appsChannel = supabase
-                .channel('user_saved_apps_changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'user_saved_apps' }, () => {
+                .channel('apps_changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'apps' }, () => {
                     fetchApps();
                 })
                 .subscribe();
@@ -219,7 +219,7 @@ export function useApps(userId?: string) {
         // Optimistic update
         setApps(prev => [...prev, newApp as AppMeta]);
 
-        const { error } = await supabase.from('user_saved_apps').insert([newApp]);
+        const { error } = await supabase.from('apps').insert([newApp]);
         if (error) {
             console.error('Error adding app to Supabase:', error);
         }
@@ -230,7 +230,7 @@ export function useApps(userId?: string) {
         setApps(prev => prev.map(a => a.id === id ? { ...app, id } as AppMeta : a));
 
         const { error } = await supabase
-            .from('user_saved_apps')
+            .from('apps')
             .update(app)
             .eq('id', id);
 
@@ -244,7 +244,7 @@ export function useApps(userId?: string) {
         setApps(prev => prev.filter(a => a.id !== id));
 
         const { error } = await supabase
-            .from('user_saved_apps')
+            .from('apps')
             .delete()
             .eq('id', id);
 
