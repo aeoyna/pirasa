@@ -34,6 +34,7 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
             getSession: () => Promise.resolve({ data: { session: null }, error: null }),
             onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
             signInWithPassword: () => Promise.resolve({ data: {}, error: null }),
+            signInWithOAuth: () => Promise.resolve({ data: {}, error: null }),
             signUp: () => Promise.resolve({ data: {}, error: null }),
             signOut: () => Promise.resolve({ error: null }),
         },

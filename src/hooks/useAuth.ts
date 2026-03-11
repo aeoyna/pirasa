@@ -40,11 +40,21 @@ export function useAuth() {
         if (error) console.error('Error signing out:', error.message);
     };
 
+    const updateUsername = async (newName: string): Promise<{ error: string | null }> => {
+        const { data, error } = await supabase.auth.updateUser({
+            data: { display_name: newName }
+        });
+        if (error) return { error: error.message };
+        if (data.user) setUser(data.user);
+        return { error: null };
+    };
+
     return {
         user,
         session,
         loading,
         signInWithGoogle,
-        signOut
+        signOut,
+        updateUsername
     };
 }

@@ -184,10 +184,12 @@ export const TheFlow: React.FC<Props> = ({
 
         let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
         const onWheel = (e: WheelEvent) => {
-            e.preventDefault();
             if (isAnimatingRef.current || wheelTimeout) return;
 
-            if (Math.abs(e.deltaY) > 50) {
+            // Normalize deltaY for trackpad sensitivity
+            const sensitivity = 10;
+            if (Math.abs(e.deltaY) > sensitivity) {
+                e.preventDefault();
                 if (e.deltaY > 0) {
                     goTo(activeIndexRef.current + 1);
                 } else {

@@ -103,7 +103,7 @@ export function useApps(userId?: string) {
     const fetchApps = useCallback(async () => {
         try {
             const { data, error } = await supabase
-                .from('apps')
+                .from('user_saved_apps')
                 .select('*')
                 .order('created_at', { ascending: false });
 
@@ -120,12 +120,12 @@ export function useApps(userId?: string) {
         }
     }, []);
 
-    // Fetch likes from Supabase
+    // Fetch likes from Supabase (Aggregate from user_votes)
     const fetchLikes = useCallback(async () => {
         try {
             const { data, error } = await supabase
-                .from('app_stats')
-                .select('app_id, likes');
+                .from('user_votes')
+                .select('app_id, vote_value');
 
             if (error) {
                 console.error('Error fetching likes:', error);
@@ -134,7 +134,7 @@ export function useApps(userId?: string) {
 
             const map: { [id: string]: number } = {};
             data.forEach((row: any) => {
-                map[row.app_id] = row.likes;
+                map[row.app_id] = (map[row.app_id] || 0) + row.vote_value;
             });
             setLikesMap(map);
         } catch (e) {
@@ -171,15 +171,15 @@ export function useApps(userId?: string) {
 
         if (hasUrl && hasKey) {
             const statsChannel = supabase
-                .channel('app_stats_changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'app_stats' }, () => {
+                .channel('user_votes_changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'user_votes' }, () => {
                     fetchLikes();
                 })
                 .subscribe();
 
             const appsChannel = supabase
-                .channel('apps_changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'apps' }, () => {
+                .channel('user_saved_apps_changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'user_saved_apps' }, () => {
                     fetchApps();
                 })
                 .subscribe();
@@ -219,7 +219,7 @@ export function useApps(userId?: string) {
         // Optimistic update
         setApps(prev => [...prev, newApp as AppMeta]);
 
-        const { error } = await supabase.from('apps').insert([newApp]);
+        const { error } = await supabase.from('user_saved_apps').insert([newApp]);
         if (error) {
             console.error('Error adding app to Supabase:', error);
         }
@@ -230,7 +230,7 @@ export function useApps(userId?: string) {
         setApps(prev => prev.map(a => a.id === id ? { ...app, id } as AppMeta : a));
 
         const { error } = await supabase
-            .from('apps')
+            .from('user_saved_apps')
             .update(app)
             .eq('id', id);
 
@@ -244,7 +244,7 @@ export function useApps(userId?: string) {
         setApps(prev => prev.filter(a => a.id !== id));
 
         const { error } = await supabase
-            .from('apps')
+            .from('user_saved_apps')
             .delete()
             .eq('id', id);
 
@@ -282,24 +282,20 @@ export function useApps(userId?: string) {
         }));
 
         // DB Updates
-        const currentLikes = likesMap[id] || 0;
-
         if (newVote === 0) {
             await supabase.from('user_votes').delete().eq('user_id', userId).eq('app_id', id);
         } else {
             await supabase.from('user_votes').upsert({ user_id: userId, app_id: id, vote_value: newVote }, { onConflict: 'user_id,app_id' });
         }
 
-        // Sync total stats
-        await supabase.from('app_stats').upsert({ app_id: id, likes: currentLikes + statDiff }, { onConflict: 'app_id' });
+        // Removed redundant app_stats upsert; global likes are now derived from user_votes
     };
 
     const incrementLike = async (id: string) => {
         if (!userId) {
-            // Fallback for anons if you want to allow it, otherwise maybe no-op or notify
+            // If anonymous voting is not supported by user_votes, we might need a different approach
+            // but for now we follow the "Correct: user_votes" instruction.
             setLikesMap(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-            const currentLikes = likesMap[id] || 0;
-            await supabase.from('app_stats').upsert({ app_id: id, likes: currentLikes + 1 }, { onConflict: 'app_id' });
             return;
         }
         // If already upvoted, clicking again acts as an UNDO (0)
@@ -310,8 +306,6 @@ export function useApps(userId?: string) {
     const decrementLike = async (id: string) => {
         if (!userId) {
             setLikesMap(prev => ({ ...prev, [id]: (prev[id] || 0) - 1 }));
-            const currentLikes = likesMap[id] || 0;
-            await supabase.from('app_stats').upsert({ app_id: id, likes: currentLikes - 1 }, { onConflict: 'app_id' });
             return;
         }
         // If already downvoted, clicking again acts as an UNDO (0)

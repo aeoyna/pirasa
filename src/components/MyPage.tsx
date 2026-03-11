@@ -12,8 +12,32 @@ interface MyPageProps {
 }
 
 export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps, onAddSite, initialTab }) => {
-    const { user, signInWithGoogle, signOut } = useAuth();
+    const { user, signInWithGoogle, signOut, updateUsername } = useAuth();
     const [activeTab, setActiveTab] = useState<'saved' | 'posts' | 'new'>(initialTab || 'saved');
+
+    // Username editing state
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [nameInput, setNameInput] = useState('');
+    const [nameError, setNameError] = useState('');
+    const [nameSaving, setNameSaving] = useState(false);
+
+    const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email || '';
+
+    const handleEditName = () => {
+        setNameInput(displayName);
+        setNameError('');
+        setIsEditingName(true);
+    };
+
+    const handleSaveName = async () => {
+        const trimmed = nameInput.trim();
+        if (!trimmed) { setNameError('名前を入力してください'); return; }
+        setNameSaving(true);
+        const { error } = await updateUsername(trimmed);
+        setNameSaving(false);
+        if (error) { setNameError(error); return; }
+        setIsEditingName(false);
+    };
 
     // New Site Form State
     const [name, setName] = useState('');
@@ -76,7 +100,29 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                 <div className="user-profile-bar">
                     <img src={user.user_metadata?.avatar_url || 'https://www.gravatar.com/avatar/?d=mp'} alt="Profile" className="user-avatar" />
                     <div className="user-details">
-                        <span className="user-name">{user.user_metadata?.full_name || user.email}</span>
+                        {isEditingName ? (
+                            <div className="username-edit-row">
+                                <input
+                                    className="username-input"
+                                    value={nameInput}
+                                    onChange={e => setNameInput(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setIsEditingName(false); }}
+                                    autoFocus
+                                    maxLength={30}
+                                    placeholder="ユーザーネーム"
+                                />
+                                <button className="username-save-btn" onClick={handleSaveName} disabled={nameSaving}>
+                                    {nameSaving ? '…' : '✓'}
+                                </button>
+                                <button className="username-cancel-btn" onClick={() => setIsEditingName(false)}>✕</button>
+                            </div>
+                        ) : (
+                            <div className="username-display-row">
+                                <span className="user-name">{displayName}</span>
+                                <button className="username-edit-btn" onClick={handleEditName} title="ユーザーネームを変更">✎</button>
+                            </div>
+                        )}
+                        {nameError && <span className="username-error">{nameError}</span>}
                         <button className="sign-out-btn" onClick={signOut}>Sign Out</button>
                     </div>
                 </div>
