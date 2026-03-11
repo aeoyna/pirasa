@@ -6,6 +6,8 @@ import './BBSPanel.css';
 interface BBSPost {
     id: string;
     user_id: string;
+    display_name: string;
+    avatar_url: string;
     content: string;
     created_at: string;
 }
@@ -47,9 +49,14 @@ export const BBSPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         e.preventDefault();
         if (!user || !content.trim()) return;
 
+        const display_name = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email || 'Anonymous';
+        const avatar_url = user.user_metadata?.avatar_url || '';
+
         setIsSubmitting(true);
         const { error } = await supabase.from('bbs_posts').insert([{
             user_id: user.id,
+            display_name,
+            avatar_url,
             content: content.trim()
         }]);
 
@@ -77,13 +84,16 @@ export const BBSPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                             <div key={post.id} className="bbs-post">
                                 <div className="bbs-post-header">
                                     <div className="bbs-avatar">
-                                        {/* Fallback anonymous avatar until Profiles table exists */}
-                                        <svg viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                        </svg>
+                                        {post.avatar_url ? (
+                                            <img src={post.avatar_url} alt={post.display_name} referrerPolicy="no-referrer" />
+                                        ) : (
+                                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                            </svg>
+                                        )}
                                     </div>
                                     <div className="bbs-meta">
-                                        <span className="bbs-author">User {post.user_id.substring(0, 5)}</span>
+                                        <span className="bbs-author">{post.display_name || `User ${post.user_id.substring(0, 5)}`}</span>
                                         <span className="bbs-time">{new Date(post.created_at).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                 </div>
