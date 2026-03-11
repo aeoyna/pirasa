@@ -20,7 +20,7 @@ export const GENRES = [
     'ゲーム'
 ] as const;
 
-const STORAGE_KEY = 'pirasa_apps_v11';
+const STORAGE_KEY = 'pirasa_apps_v12';
 const DEVICE_ID_KEY = 'pirasa_device_id';
 const SAVED_APPS_KEY = 'pirasa_saved_apps';
 
@@ -213,7 +213,7 @@ export function useApps(userId?: string) {
     });
 
     const addApp = async (app: Omit<AppMeta, 'id'>) => {
-        const id = Date.now().toString();
+        const id = crypto.randomUUID();
         const newApp = { ...app, id, created_by: userId || deviceId };
 
         // Optimistic update
