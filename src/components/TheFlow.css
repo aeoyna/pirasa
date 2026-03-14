@@ -1016,20 +1016,18 @@
 }
 
 .ds-chips {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
-    margin-top: 10px;
+    margin-top: 16px;
 }
 
 .ds-chip {
-    background: var(--chic-glass);
-    border: 0.5px solid var(--chic-border);
-    padding: 16px;
-    border-radius: 20px;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    padding-left: 16px;
+    border-left: 1px solid var(--chic-accent);
 }
 
 .ds-chip label {
