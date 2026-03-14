@@ -6,8 +6,7 @@
     --chic-glass: rgba(25, 25, 25, 0.7);
     --chic-border: rgba(255, 255, 255, 0.12);
     --chic-blur: blur(24px) saturate(160%);
-    --mystery-bg: #111;
-    --mystery-accent: #d4af37;
+    --brand-bg: #000000;
 }
 
 .flow-root {
@@ -232,61 +231,26 @@
     flex-shrink: 0;
 }
 
-/* ─── Mystery Block icon ────────────────────────────────── */
-.mystery-block {
+/* ─── Brand Block icon ────────────────────────────────── */
+.brand-block {
     width: 100%;
     height: 100%;
-    background: var(--mystery-bg);
-    position: relative;
+    background: var(--brand-bg);
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: inherit;
-    box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.2), inset 2px 2px 0 rgba(255, 255, 255, 0.2);
     overflow: hidden;
 }
 
-.mystery-logo {
-    width: 65%;
-    height: 65%;
+.brand-logo-icon {
+    width: 75%;
+    height: 75%;
     object-fit: contain;
-    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));
-    z-index: 2;
+    filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
 }
 
-.block-dots {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
 
-.dot {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: rgba(0, 0, 0, 0.15);
-}
-
-.dot.tl {
-    top: 4px;
-    left: 4px;
-}
-
-.dot.tr {
-    top: 4px;
-    right: 4px;
-}
-
-.dot.bl {
-    bottom: 4px;
-    left: 4px;
-}
-
-.dot.br {
-    bottom: 4px;
-    right: 4px;
-}
 
 .sd-vote-group {
     display: flex;
@@ -588,26 +552,30 @@
     width: 100%;
 }
 
-.home-logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 24px;
-    filter: drop-shadow(0 0 20px var(--chic-accent-glow));
+.brand-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding: 80px 0 40px;
+    width: 100%;
+    animation: fadeScaleIn 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.home-band {
-    background: var(--chic-glass);
-    border-top: 0.5px solid var(--chic-accent);
-    border-bottom: 0.5px solid var(--chic-accent);
-    padding: 60px 0;
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    box-shadow: 0 0 50px rgba(212, 175, 55, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+.hero-logo {
+    width: 160px;
+    height: 160px;
+    filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.3));
+    object-fit: contain;
 }
 
-.home-title {
+.hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hero-title {
     font-size: 3.5rem;
     font-weight: 200;
     letter-spacing: 0.3em;
@@ -617,12 +585,23 @@
     text-shadow: 0 0 25px var(--chic-accent-glow);
 }
 
-.home-subtitle {
-    font-size: 0.8rem;
+.hero-subtitle {
+    font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.4);
     letter-spacing: 0.5em;
     text-transform: uppercase;
-    margin-top: 12px;
+}
+
+@keyframes fadeScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .tutorial-grid {

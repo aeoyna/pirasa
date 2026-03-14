@@ -6,24 +6,20 @@ import { CommentsPanel } from './CommentsPanel';
 import './TheFlow.css';
 
 const MysteryBlock: React.FC = () => (
-    <div className="mystery-block">
-        <img src="/icon.png" alt="Pirasa" className="mystery-logo" />
-        <div className="block-dots">
-            <span className="dot tl"></span>
-            <span className="dot tr"></span>
-            <span className="dot bl"></span>
-            <span className="dot br"></span>
-        </div>
+    <div className="brand-block">
+        <img src="/icon.png" alt="Pirasa" className="brand-logo-icon" />
     </div>
 );
 
 const HomeView = () => (
     <div className="home-view">
         <div className="home-content">
-            <div className="home-band">
-                <img src="/icon.png" alt="Pirasa Logo" className="home-logo" />
-                <h1 className="home-title">Pirasa</h1>
-                <p className="home-subtitle">Sophisticated Curation Hub</p>
+            <div className="brand-hero">
+                <img src="/icon.png" alt="Pirasa Logo" className="hero-logo" />
+                <div className="hero-text">
+                    <h1 className="hero-title">Pirasa</h1>
+                    <p className="hero-subtitle">Sophisticated Curation Hub</p>
+                </div>
             </div>
 
             <div className="tutorial-grid">
@@ -34,32 +30,17 @@ const HomeView = () => (
                         <span>「帯」を上下にスライド</span>
                     </div>
                 </div>
-                <div className="tutorial-item horizontal">
-                    <div className="gesture-icon">←</div>
-                    <div className="gesture-text">
-                        <strong>SITE LIST</strong>
-                        <span>全サイトをグリッド表示</span>
-                    </div>
-                </div>
-                <div className="tutorial-item horizontal">
-                    <div className="gesture-icon">→</div>
-                    <div className="gesture-text">
-                        <strong>MY PAGE</strong>
-                        <span>保存履歴や設定を確認</span>
-                    </div>
-                </div>
                 <div className="tutorial-item action">
                     <div className="gesture-icon">✥</div>
                     <div className="gesture-text">
                         <strong>ACTION HUB</strong>
-                        <span>最下部から直接アクション</span>
+                        <span>最下部からアクション</span>
                     </div>
                 </div>
             </div>
 
             <div className="home-footer">
                 <p><strong>最下部のタブ帯（帯）</strong>をスワイプして操作</p>
-                <div className="scroll-indicator">↑</div>
             </div>
         </div>
     </div>
