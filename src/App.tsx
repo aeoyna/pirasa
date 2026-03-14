@@ -31,6 +31,8 @@ function App() {
     );
   }
 
+  const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email || '';
+
   return (
     <div className="app-root">
       <TheFlow
@@ -38,6 +40,7 @@ function App() {
         deviceId={deviceId}
         savedAppIds={savedAppIds}
         userId={user?.id}
+        userName={displayName}
         onOpenAdmin={() => setAdminOpen(true)}
         onIncrementLike={incrementLike}
         onDecrementLike={decrementLike}

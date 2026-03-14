@@ -69,6 +69,7 @@ interface Props {
     deviceId: string;
     savedAppIds: string[];
     userId?: string;
+    userName?: string;
     onOpenAdmin: () => void;
     onIncrementLike: (id: string) => void;
     onDecrementLike: (id: string) => void;
@@ -83,6 +84,7 @@ export const TheFlow: React.FC<Props> = ({
     deviceId,
     savedAppIds,
     userId,
+    userName,
     onOpenAdmin,
     onIncrementLike,
     onDecrementLike,
@@ -478,7 +480,7 @@ export const TheFlow: React.FC<Props> = ({
                                 {(currentApp.poster_name || (currentApp.created_by && currentApp.created_by !== 'system')) && (
                                     <div className="ds-chip">
                                         <label>投稿者</label>
-                                        <span>{currentApp.poster_name || (currentApp.created_by === deviceId || (userId && currentApp.created_by === userId) ? 'あなた' : 'ユーザー')}</span>
+                                        <span>{currentApp.poster_name || (currentApp.created_by === deviceId || (userId && currentApp.created_by === userId) ? (userName || 'あなた') : 'ユーザー')}</span>
                                     </div>
                                 )}
                                 {currentApp.merit && (
