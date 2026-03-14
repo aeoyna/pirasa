@@ -1398,10 +1398,10 @@
 }
 
 .app-card-votes {
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     font-weight: 800;
     color: var(--chic-accent);
-    min-height: 1em;
+    min-height: 1.2em;
 }
 
 /* Tab Bar Interaction Effect */
