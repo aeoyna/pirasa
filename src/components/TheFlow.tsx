@@ -7,7 +7,7 @@ import './TheFlow.css';
 
 const MysteryBlock: React.FC = () => (
     <div className="mystery-block">
-        <span className="mystery-question">?</span>
+        <img src="/icon.png" alt="Pirasa" className="mystery-logo" />
         <div className="block-dots">
             <span className="dot tl"></span>
             <span className="dot tr"></span>
@@ -21,6 +21,7 @@ const HomeView = () => (
     <div className="home-view">
         <div className="home-content">
             <div className="home-band">
+                <img src="/icon.png" alt="Pirasa Logo" className="home-logo" />
                 <h1 className="home-title">Pirasa</h1>
                 <p className="home-subtitle">Sophisticated Curation Hub</p>
             </div>
