@@ -473,10 +473,10 @@ export const TheFlow: React.FC<Props> = ({
                                 ))}
                             </div>
                             <div className="ds-chips">
-                                {currentApp.created_by && currentApp.created_by !== 'system' && (
+                                {(currentApp.poster_name || (currentApp.created_by && currentApp.created_by !== 'system')) && (
                                     <div className="ds-chip">
                                         <label>投稿者</label>
-                                        <span>{currentApp.created_by === deviceId || (userId && currentApp.created_by === userId) ? 'あなた' : 'ユーザー'}</span>
+                                        <span>{currentApp.poster_name || (currentApp.created_by === deviceId || (userId && currentApp.created_by === userId) ? 'あなた' : 'ユーザー')}</span>
                                     </div>
                                 )}
                                 {currentApp.merit && (

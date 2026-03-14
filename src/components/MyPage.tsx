@@ -56,7 +56,8 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                 tagline,
                 merit,
                 analysis: [],
-                genre: "ツール"
+                genre: "ツール",
+                poster_name: displayName || '匿名'
             });
             setName('');
             setUrl('');

@@ -11,6 +11,7 @@ export interface AppMeta {
     genre?: string;
     likesCount?: number;
     created_by?: string;
+    poster_name?: string;
 }
 
 export const GENRES = [

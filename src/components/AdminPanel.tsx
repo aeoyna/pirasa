@@ -17,6 +17,7 @@ const EMPTY_FORM: Omit<AppMeta, 'id'> = {
     analysis: ['', '', ''],
     merit: '',
     genre: '',
+    poster_name: '',
 };
 
 export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, onClose }) => {
@@ -99,6 +100,13 @@ export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, o
                 </div>
             ) : (
                 <div className="admin-form">
+                    <label>投稿者</label>
+                    <input
+                        value={form.poster_name || ''}
+                        onChange={e => setForm(f => ({ ...f, poster_name: e.target.value }))}
+                        placeholder="例: 管理人"
+                    />
+
                     <label>サイト名<span>*</span></label>
                     <input
                         value={form.name}
