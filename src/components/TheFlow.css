@@ -1390,6 +1390,20 @@
     transform: scale(0.95);
 }
 
+.app-card-action-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.app-card-votes {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--chic-accent);
+    min-height: 1em;
+}
+
 /* Tab Bar Interaction Effect */
 .bottom-tab-bar.actions.active {
     background: rgba(20, 20, 20, 0.95);

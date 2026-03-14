@@ -534,15 +534,20 @@ export const TheFlow: React.FC<Props> = ({
                                                 <span className="app-card-category">{app.genre}</span>
                                                 <p>{app.tagline}</p>
                                             </div>
-                                            <button
-                                                className="app-card-visit-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    window.open(app.url, '_blank');
-                                                }}
-                                            >
-                                                VISIT
-                                            </button>
+                                            <div className="app-card-action-col">
+                                                <span className="app-card-votes">
+                                                    {app.likesCount && app.likesCount !== 0 ? (app.likesCount > 0 ? `+${app.likesCount}` : app.likesCount) : ''}
+                                                </span>
+                                                <button
+                                                    className="app-card-visit-btn"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.open(app.url, '_blank');
+                                                    }}
+                                                >
+                                                    VISIT
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
