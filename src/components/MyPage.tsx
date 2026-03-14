@@ -55,7 +55,6 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                 url,
                 tagline,
                 merit,
-                revenue: "N/A", // Defaults
                 analysis: [],
                 genre: "ツール"
             });

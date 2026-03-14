@@ -15,7 +15,6 @@ const EMPTY_FORM: Omit<AppMeta, 'id'> = {
     url: '',
     tagline: '',
     analysis: ['', '', ''],
-    revenue: '',
     merit: '',
     genre: '',
 };
@@ -38,7 +37,6 @@ export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, o
             url: app.url,
             tagline: app.tagline,
             analysis: [...app.analysis],
-            revenue: app.revenue,
             merit: app.merit,
             genre: app.genre || ''
         });
@@ -133,12 +131,6 @@ export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, o
                         />
                     ))}
 
-                    <label>収益モデル</label>
-                    <input
-                        value={form.revenue}
-                        onChange={e => setForm(f => ({ ...f, revenue: e.target.value }))}
-                        placeholder="例: フリーミアム (Pro: $9/mo)"
-                    />
 
                     <label>生存戦略のメリット</label>
                     <input

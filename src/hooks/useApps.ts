@@ -7,7 +7,6 @@ export interface AppMeta {
     url: string;
     tagline: string;
     analysis: string[];
-    revenue: string;
     merit: string;
     genre?: string;
     likesCount?: number;
@@ -123,7 +122,6 @@ export function useApps(userId?: string) {
                     'タップで詳細を開き、再読込やサイト訪問が可能。',
                     'ダブルクリックで設定画面。'
                 ],
-                revenue: '無料',
                 merit: '直感的なインターフェースで新しいWeb体験。',
                 genre: 'ツール'
             };

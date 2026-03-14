@@ -473,10 +473,10 @@ export const TheFlow: React.FC<Props> = ({
                                 ))}
                             </div>
                             <div className="ds-chips">
-                                {currentApp.revenue && (
+                                {currentApp.created_by && currentApp.created_by !== 'system' && (
                                     <div className="ds-chip">
-                                        <label>収益モデル</label>
-                                        <span>{currentApp.revenue}</span>
+                                        <label>投稿者</label>
+                                        <span>{currentApp.created_by === deviceId || (userId && currentApp.created_by === userId) ? 'あなた' : 'ユーザー'}</span>
                                     </div>
                                 )}
                                 {currentApp.merit && (
@@ -492,85 +492,91 @@ export const TheFlow: React.FC<Props> = ({
             )}
 
             {/* Site List Overlay */}
-            {isListOpen && (
-                <div className="list-overlay" onClick={() => setIsListOpen(false)}>
-                    <div className="list-container" onClick={e => e.stopPropagation()}>
-                        <div className="list-header">
-                            <h2>サイト検索</h2>
-                            <button className="list-close" onClick={() => setIsListOpen(false)}>×</button>
-                        </div>
-                        <div className="search-box-container">
-                            <input type="text" className="search-input" placeholder="例: Saturn, AI, Excel..." />
-                        </div>
-                        <div className="app-grid">
-                            {apps.map((app, index) => (
-                                <div
-                                    key={app.id}
-                                    className={`app-card ${index === resolvedActiveIndex ? 'active' : ''}`}
-                                    onClick={() => {
-                                        goTo(index);
-                                        setIsListOpen(false);
-                                    }}
-                                >
-                                    <div className="app-card-icon">
-                                        {app.url === 'internal:home' || imageErrors.has(app.id) ? (
-                                            <MysteryBlock />
-                                        ) : (
-                                            <img
-                                                src={`https://www.google.com/s2/favicons?sz=64&domain=${new URL(app.url).hostname}`}
-                                                alt={app.name}
-                                                onError={() => setImageErrors(prev => new Set(prev).add(app.id))}
-                                            />
-                                        )}
-                                    </div>
-                                    <div className="app-card-info">
-                                        <div className="app-card-text">
-                                            <h3>{app.name}</h3>
-                                            <span className="app-card-category">{app.genre}</span>
-                                            <p>{app.tagline}</p>
+            {
+                isListOpen && (
+                    <div className="list-overlay" onClick={() => setIsListOpen(false)}>
+                        <div className="list-container" onClick={e => e.stopPropagation()}>
+                            <div className="list-header">
+                                <h2>サイト検索</h2>
+                                <button className="list-close" onClick={() => setIsListOpen(false)}>×</button>
+                            </div>
+                            <div className="search-box-container">
+                                <input type="text" className="search-input" placeholder="例: Saturn, AI, Excel..." />
+                            </div>
+                            <div className="app-grid">
+                                {apps.map((app, index) => (
+                                    <div
+                                        key={app.id}
+                                        className={`app-card ${index === resolvedActiveIndex ? 'active' : ''}`}
+                                        onClick={() => {
+                                            goTo(index);
+                                            setIsListOpen(false);
+                                        }}
+                                    >
+                                        <div className="app-card-icon">
+                                            {app.url === 'internal:home' || imageErrors.has(app.id) ? (
+                                                <MysteryBlock />
+                                            ) : (
+                                                <img
+                                                    src={`https://www.google.com/s2/favicons?sz=64&domain=${new URL(app.url).hostname}`}
+                                                    alt={app.name}
+                                                    onError={() => setImageErrors(prev => new Set(prev).add(app.id))}
+                                                />
+                                            )}
                                         </div>
-                                        <button
-                                            className="app-card-visit-btn"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                window.open(app.url, '_blank');
-                                            }}
-                                        >
-                                            VISIT
-                                        </button>
+                                        <div className="app-card-info">
+                                            <div className="app-card-text">
+                                                <h3>{app.name}</h3>
+                                                <span className="app-card-category">{app.genre}</span>
+                                                <p>{app.tagline}</p>
+                                            </div>
+                                            <button
+                                                className="app-card-visit-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    window.open(app.url, '_blank');
+                                                }}
+                                            >
+                                                VISIT
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* My Page Component */}
-            {isMyPageOpen && (
-                <MyPage
-                    initialTab={myPageTab}
-                    onClose={() => setIsMyPageOpen(false)}
-                    savedApps={apps.filter(a => savedAppIds.includes(a.id))}
-                    myPostedApps={apps.filter(a => a.created_by === deviceId || (userId && a.created_by === userId))}
-                    onAddSite={async (appData) => {
-                        await onAddSite(appData);
-                        showToast('Site posted! 🚀');
-                    }}
-                />
-            )}
+            {
+                isMyPageOpen && (
+                    <MyPage
+                        initialTab={myPageTab}
+                        onClose={() => setIsMyPageOpen(false)}
+                        savedApps={apps.filter(a => savedAppIds.includes(a.id))}
+                        myPostedApps={apps.filter(a => a.created_by === deviceId || (userId && a.created_by === userId))}
+                        onAddSite={async (appData) => {
+                            await onAddSite(appData);
+                            showToast('Site posted! 🚀');
+                        }}
+                    />
+                )
+            }
 
             {/* Board Overlay */}
             {isBoardOpen && <BBSPanel onClose={() => setIsBoardOpen(false)} />}
 
             {/* Comments Overlay */}
-            {activeCommentAppId && (
-                <CommentsPanel
-                    appId={activeCommentAppId}
-                    appName={apps.find(a => a.id === activeCommentAppId)?.name || 'アプリ'}
-                    onClose={() => setActiveCommentAppId(null)}
-                />
-            )}
-        </div>
+            {
+                activeCommentAppId && (
+                    <CommentsPanel
+                        appId={activeCommentAppId}
+                        appName={apps.find(a => a.id === activeCommentAppId)?.name || 'アプリ'}
+                        onClose={() => setActiveCommentAppId(null)}
+                    />
+                )
+            }
+        </div >
     );
 };
