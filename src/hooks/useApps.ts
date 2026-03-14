@@ -112,8 +112,32 @@ export function useApps(userId?: string) {
                 return;
             }
 
-            if (data && data.length > 0) {
-                setApps(data);
+            const homeApp: AppMeta = {
+                id: 'home',
+                name: 'Home',
+                url: 'internal:home',
+                tagline: 'Pirasa へようこそ',
+                analysis: [
+                    '上にスワイプで次のサイトへ。',
+                    '左で低評価（Downvote）、右で高評価（Upvote）。',
+                    'タップで詳細を開き、再読込やサイト訪問が可能。',
+                    'ダブルクリックで設定画面。'
+                ],
+                revenue: '無料',
+                merit: '直感的なインターフェースで新しいWeb体験。',
+                genre: 'ツール'
+            };
+
+            if (data) {
+                // Ensure Home app is always present, even if DB is empty
+                const hasHome = data.some((app: any) => app.url === 'internal:home');
+                if (!hasHome) {
+                    setApps([homeApp, ...data]);
+                } else {
+                    setApps(data);
+                }
+            } else {
+                setApps([homeApp]);
             }
         } catch (e) {
             console.error('Critical error fetching apps:', e);
@@ -193,10 +217,13 @@ export function useApps(userId?: string) {
 
     // Local sync
     useEffect(() => {
-        if (apps.length > 0) {
+        // Prevent clearing cache exactly on first render before we fetch,
+        // but if we genuinely fetched and got 0 apps (or only Home), reflect it.
+        // When updating, 'loading' state handles safety.
+        if (!loading) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
         }
-    }, [apps]);
+    }, [apps, loading]);
 
     const appsWithLikes = apps.map(app => ({
         ...app,

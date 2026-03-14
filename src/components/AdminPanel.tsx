@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { type AppMeta, GENRES } from '../hooks/useApps';
-import migrateData from '../data/migrate_data.json';
 import './AdminPanel.css';
 
 interface Props {
@@ -66,24 +65,6 @@ export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, o
         });
     };
 
-    const handleMigrate = () => {
-        if (!window.confirm('migrate_data.json からデータをインポートしますか？')) return;
-
-        const existingUrls = new Set(apps.map(a => a.url));
-        let count = 0;
-
-        migrateData.forEach((site: any) => {
-            if (!existingUrls.has(site.url)) {
-                // Remove ID if present to let the hook generate a new one
-                const { id, ...appData } = site;
-                onAdd(appData);
-                count++;
-            }
-        });
-
-        alert(`${count} 件のサイトをインポートしました。`);
-    };
-
     return (
         <div className="admin-root">
             <div className="admin-header">
@@ -93,7 +74,6 @@ export const AdminPanel: React.FC<Props> = ({ apps, onAdd, onUpdate, onRemove, o
                 <h1>{view === 'form' ? (editing ? 'サイトを編集' : '新しいサイト') : 'サイト設定'}</h1>
                 {view === 'list' && (
                     <div className="admin-actions-group">
-                        <button className="admin-migrate-btn" onClick={handleMigrate} title="JSONからインポート">📥</button>
                         <button className="admin-add-btn" onClick={openNew}>＋</button>
                     </div>
                 )}
