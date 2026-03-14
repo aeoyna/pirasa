@@ -74,6 +74,7 @@ interface Props {
     onDecrementLike: (id: string) => void;
     onToggleSave: (id: string) => void;
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<void>;
+    onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
     userVotesMap: { [id: string]: number };
 }
 
@@ -87,6 +88,7 @@ export const TheFlow: React.FC<Props> = ({
     onDecrementLike,
     onToggleSave,
     onAddSite,
+    onUpdateSite,
     userVotesMap
 }) => {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -559,6 +561,10 @@ export const TheFlow: React.FC<Props> = ({
                         onAddSite={async (appData) => {
                             await onAddSite(appData);
                             showToast('Site posted! 🚀');
+                        }}
+                        onUpdateSite={async (id, appData) => {
+                            await onUpdateSite(id, appData);
+                            showToast('Site updated! ✨');
                         }}
                     />
                 )

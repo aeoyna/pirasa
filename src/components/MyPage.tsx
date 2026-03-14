@@ -8,10 +8,11 @@ interface MyPageProps {
     savedApps: AppMeta[];
     myPostedApps: AppMeta[];
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<void>;
+    onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
     initialTab?: 'saved' | 'posts' | 'new';
 }
 
-export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps, onAddSite, initialTab }) => {
+export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps, onAddSite, onUpdateSite, initialTab }) => {
     const { user, signInWithGoogle, signOut, updateUsername } = useAuth();
     const [activeTab, setActiveTab] = useState<'saved' | 'posts' | 'new'>(initialTab || 'saved');
 
@@ -39,26 +40,52 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
         setIsEditingName(false);
     };
 
-    // New Site Form State
+    // New/Edit Site Form State
+    const [editingApp, setEditingApp] = useState<AppMeta | null>(null);
     const [name, setName] = useState('');
     const [url, setUrl] = useState('');
     const [tagline, setTagline] = useState('');
     const [merit, setMerit] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const startEdit = (app: AppMeta) => {
+        setEditingApp(app);
+        setName(app.name);
+        setUrl(app.url);
+        setTagline(app.tagline);
+        setMerit(app.merit);
+        setActiveTab('new');
+    };
+
+    const cancelEdit = () => {
+        setEditingApp(null);
+        setName('');
+        setUrl('');
+        setTagline('');
+        setMerit('');
+    };
+
     const handlePostSite = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await onAddSite({
+            const appData = {
                 name,
                 url,
                 tagline,
                 merit,
-                analysis: [],
-                genre: "ツール",
-                poster_name: displayName || '匿名'
-            });
+                analysis: editingApp ? editingApp.analysis : [],
+                genre: editingApp ? editingApp.genre : "ツール",
+                poster_name: editingApp ? editingApp.poster_name : (displayName || '匿名')
+            };
+
+            if (editingApp) {
+                await onUpdateSite(editingApp.id, appData);
+                setEditingApp(null);
+            } else {
+                await onAddSite(appData);
+            }
+
             setName('');
             setUrl('');
             setTagline('');
@@ -130,7 +157,15 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                 <div className="mypage-tabs">
                     <button className={`tab-btn ${activeTab === 'saved' ? 'active' : ''}`} onClick={() => setActiveTab('saved')}>Saved</button>
                     <button className={`tab-btn ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}>My Posts</button>
-                    <button className={`tab-btn ${activeTab === 'new' ? 'active' : ''}`} onClick={() => setActiveTab('new')}>+ Post Site</button>
+                    <button
+                        className={`tab-btn ${activeTab === 'new' ? 'active' : ''}`}
+                        onClick={() => {
+                            if (activeTab !== 'new') cancelEdit();
+                            setActiveTab('new');
+                        }}
+                    >
+                        {editingApp ? 'Edit Site' : '+ Post Site'}
+                    </button>
                 </div>
 
                 <div className="mypage-content-area">
@@ -151,8 +186,16 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                             {myPostedApps.length === 0 ? <p className="empty-state">You haven't posted any sites.</p> : null}
                             {myPostedApps.map(app => (
                                 <div key={app.id} className="app-list-item">
-                                    <div className="app-list-item-title">{app.name}</div>
-                                    <div className="app-list-item-url">{app.url}</div>
+                                    <div className="app-list-row">
+                                        <div className="app-list-main">
+                                            <div className="app-list-item-title">{app.name}</div>
+                                            <div className="app-list-item-url">{app.url}</div>
+                                        </div>
+                                        <button className="app-edit-btn" onClick={() => startEdit(app)}>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            編集
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -176,9 +219,16 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                                 <label>Merit (Benefit)</label>
                                 <textarea value={merit} onChange={e => setMerit(e.target.value)} required placeholder="Explain why someone should use this..." rows={3} />
                             </div>
-                            <button type="submit" className="submit-post-btn" disabled={isSubmitting}>
-                                {isSubmitting ? 'Posting...' : 'Post Site'}
-                            </button>
+                            <div className="form-actions">
+                                <button type="submit" className="submit-post-btn" disabled={isSubmitting}>
+                                    {isSubmitting ? 'Processing...' : (editingApp ? 'Save Changes' : 'Post Site')}
+                                </button>
+                                {editingApp && (
+                                    <button type="button" className="cancel-post-btn" onClick={() => setActiveTab('posts')}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     )}
                 </div>

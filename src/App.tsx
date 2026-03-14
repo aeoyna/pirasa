@@ -43,6 +43,7 @@ function App() {
         onDecrementLike={decrementLike}
         onToggleSave={toggleSave}
         onAddSite={addApp}
+        onUpdateSite={updateApp}
         userVotesMap={userVotesMap}
       />
       {adminOpen && (
