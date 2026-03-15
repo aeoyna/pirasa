@@ -83,7 +83,6 @@ export const TheFlow: React.FC<Props> = ({
     const [isBoardOpen, setIsBoardOpen] = useState(false);
     const [isMyPageOpen, setIsMyPageOpen] = useState(false);
     const [myPageTab, setMyPageTab] = useState<'saved' | 'posts' | 'new'>('saved');
-    const [activeCommentAppId, setActiveCommentAppId] = useState<string | null>(null);
     const [toast, setToast] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
@@ -296,11 +295,6 @@ export const TheFlow: React.FC<Props> = ({
                                             </div>
                                             <div className="sd-right">
                                                 <div className="sd-stats">
-                                                    <button className="sd-comment-btn" onClick={(e) => { e.stopPropagation(); setActiveCommentAppId(currentApp.id); }}>
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-svg">
-                                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                                        </svg>
-                                                    </button>
                                                     <span
                                                         className={`sd-save-btn ${savedAppIds.includes(app.id) ? 'active' : ''}`}
                                                         onClick={(e) => { e.stopPropagation(); onToggleSave(app.id); }}
@@ -436,11 +430,6 @@ export const TheFlow: React.FC<Props> = ({
                                     <span className="sd-vote-count">{currentApp.likesCount || 0}</span>
                                     <button className={`sd-vote-btn ${userVotesMap[currentApp.id] === -1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
                                 </div>
-                                <button className="sd-comment-btn" onClick={(e) => { e.stopPropagation(); setActiveCommentAppId(currentApp.id); }}>
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-svg">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    </svg>
-                                </button>
                                 <span
                                     className={`sd-save-btn ${savedAppIds.includes(currentApp.id) ? 'active' : ''}`}
                                     onClick={(e) => { e.stopPropagation(); onToggleSave(currentApp.id); }}
@@ -473,6 +462,13 @@ export const TheFlow: React.FC<Props> = ({
                                 )}
                             </div>
                         </div>
+
+                        {/* Comments Section */}
+                        <CommentsPanel
+                            appId={currentApp.id}
+                            appName={currentApp.name}
+                            isEmbedded={true}
+                        />
                     </div>
                 </div>
             )}
@@ -562,16 +558,6 @@ export const TheFlow: React.FC<Props> = ({
             {/* Board Overlay */}
             {isBoardOpen && <BBSPanel onClose={() => setIsBoardOpen(false)} />}
 
-            {/* Comments Overlay */}
-            {
-                activeCommentAppId && (
-                    <CommentsPanel
-                        appId={activeCommentAppId}
-                        appName={apps.find(a => a.id === activeCommentAppId)?.name || 'アプリ'}
-                        onClose={() => setActiveCommentAppId(null)}
-                    />
-                )
-            }
         </div >
     );
 };

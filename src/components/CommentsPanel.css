@@ -172,3 +172,31 @@
     font-size: 1rem;
     cursor: pointer;
 }
+
+.comments-container.is-embedded {
+    height: auto;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+    margin-top: 32px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.comments-container.is-embedded .comments-header {
+    padding: 20px 0 16px;
+}
+
+.comments-container.is-embedded .comments-feed {
+    padding: 0 0 20px;
+    max-height: none;
+    overflow-y: visible;
+}
+
+.comments-container.is-embedded .comments-input-area {
+    padding: 16px 0 10px;
+    background: transparent;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
