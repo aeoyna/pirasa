@@ -252,55 +252,58 @@
 .sd-vote-group {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 0.5px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
     padding: 3px;
-    height: 40px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    height: 42px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .sd-vote-btn {
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 34px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 38px;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 11px;
+    border-radius: 9px;
     background: transparent;
     border: none;
     color: rgba(255, 255, 255, 0.4);
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: 500;
 }
 
 .sd-vote-btn:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px);
+}
+
+.sd-vote-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Specific styling for active states */
+.sd-vote-btn:first-child.active {
+    color: var(--chic-accent);
+    text-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+    background: rgba(212, 175, 55, 0.15);
+}
+
+.sd-vote-btn:last-child.active {
+    color: #ff6b6b;
+    text-shadow: 0 0 15px rgba(255, 107, 107, 0.4);
+    background: rgba(255, 107, 107, 0.1);
 }
 
 .sd-vote-btn:active {
     transform: scale(0.9);
-}
-
-/* Active States */
-.sd-vote-btn.active {
-    color: #000;
-    font-weight: 800;
-}
-
-.sd-vote-btn.active:first-child {
-    /* Upvote Active: Gold */
-    background: var(--chic-accent);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
-}
-
-.sd-vote-btn.active:last-child {
-    /* Downvote Active: Subtle White/Glass */
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }
 
 .sd-comment-btn {
