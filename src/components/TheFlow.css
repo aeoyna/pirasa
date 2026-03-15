@@ -158,9 +158,11 @@
 
 .sd-content {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: space-between;
     gap: 15px;
+    min-height: 84px;
+    /* Ensure enough height for alignment */
 }
 
 .sd-left {
@@ -196,9 +198,10 @@
 .sd-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    justify-content: space-between;
     min-width: 0;
     flex: 1;
+    padding: 2px 0;
 }
 
 .sd-title-row {
