@@ -102,10 +102,6 @@ export const TheFlow: React.FC<Props> = ({
 
     useEffect(() => {
         if (activeIndex >= total && total > 0) setActiveIndex(total - 1);
-
-        // Reset all slides to top on transition
-        const slides = containerRef.current?.querySelectorAll('.slide');
-        slides?.forEach(s => { s.scrollTop = 0; });
     }, [total, activeIndex]);
 
     const goTo = useCallback((nextIndex: number) => {
@@ -254,7 +250,12 @@ export const TheFlow: React.FC<Props> = ({
                                         loading={index === resolvedActiveIndex ? 'eager' : 'lazy'}
                                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                     />
-                                    <div className="slide-bottom-buffer" />
+                                    <div className="slide-bottom-buffer">
+                                        <div className="buffer-branding">
+                                            <img src="/icon.png" alt="" className="buffer-logo" />
+                                            <span>End of Page</span>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="slide-placeholder" />
