@@ -510,22 +510,18 @@
     position: relative;
     height: 100dvh;
     width: 100%;
-    overflow-x: hidden;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
     background: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0;
-    box-sizing: border-box;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
 
-.slide-bottom-spacer {
+.slide-content {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    height: 140px;
-    flex-shrink: 0;
+    min-height: 100%;
 }
 
 .app-iframe {
@@ -533,12 +529,20 @@
     width: calc(100% + 24px);
     max-width: none;
     margin-right: -24px;
-    height: 100%;
+    height: 100dvh;
+    flex-shrink: 0;
     border: none;
     background: #fff;
     border-radius: 0;
     box-shadow: none;
     transition: transform 0.3s ease;
+}
+
+.slide-bottom-buffer {
+    height: 140px;
+    width: 100%;
+    flex-shrink: 0;
+    pointer-events: none;
 }
 
 .slide-placeholder {
