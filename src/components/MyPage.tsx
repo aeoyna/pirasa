@@ -170,12 +170,17 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
 
                 <div className="mypage-content-area">
                     {activeTab === 'saved' && (
-                        <div className="app-list">
+                        <div className="app-grid">
                             {savedApps.length === 0 ? <p className="empty-state">No saved sites yet.</p> : null}
                             {savedApps.map(app => (
-                                <div key={app.id} className="app-list-item">
-                                    <div className="app-list-item-title">{app.name}</div>
-                                    <div className="app-list-item-merit">{app.merit}</div>
+                                <div key={app.id} className="app-grid-item" onClick={() => window.open(app.url, '_blank')}>
+                                    <div className="app-grid-icon">
+                                        <img
+                                            src={`https://www.google.com/s2/favicons?domain=${new URL(app.url).hostname}&sz=128`}
+                                            alt={app.name}
+                                        />
+                                    </div>
+                                    <div className="app-grid-title">{app.name}</div>
                                 </div>
                             ))}
                         </div>
