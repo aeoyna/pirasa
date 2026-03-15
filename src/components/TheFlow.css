@@ -40,19 +40,20 @@
 /* ─── Bottom Navigation Bar ────────────────────────────── */
 .bottom-nav-bar {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    left: 16px;
+    right: 16px;
     height: 70px;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(15, 15, 15, 0.85);
     backdrop-filter: var(--chic-blur);
     -webkit-backdrop-filter: var(--chic-blur);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    border-top: 0.5px solid var(--chic-border);
+    border: 1px solid var(--chic-border);
+    border-radius: 28px;
     z-index: 20000;
-    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
 }
 
 .nav-item {
@@ -118,8 +119,8 @@
 /* ─── Small Detail Card ────────────────────────────────── */
 .small-detail-card {
     position: absolute;
-    bottom: calc(85px + env(safe-area-inset-bottom, 0px));
-    /* Above BottomNavBar + Mobile Safe Area */
+    bottom: calc(105px + env(safe-area-inset-bottom, 0px));
+    /* Above Floating BottomNavBar */
     left: 15px;
     right: 15px;
     background: var(--chic-glass);
