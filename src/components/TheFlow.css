@@ -516,6 +516,8 @@
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: y mandatory;
+    scroll-padding-bottom: 180px;
+    /* Aligns with buffer height to favor site content */
 }
 
 .slide-content {
@@ -538,7 +540,6 @@
     box-shadow: none;
     transition: transform 0.3s ease;
     scroll-snap-align: start;
-    scroll-snap-stop: always;
 }
 
 .slide-bottom-buffer {
