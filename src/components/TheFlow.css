@@ -1254,60 +1254,55 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    z-index: 40000;
+    width: 100vw;
+    height: 100dvh;
+    background: #fff;
+    z-index: 25000;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fade-in-overlay 0.3s ease;
+    justify-content: flex-end;
+    animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .list-container {
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    background: var(--chic-glass);
-    border: 0.5px solid var(--chic-border);
-    border-radius: 40px;
-    padding: 32px;
-    overflow-y: auto;
-    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .list-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    padding: 20px 24px;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
 }
 
 .list-header h2 {
-    font-size: 1.1rem;
-    font-weight: 300;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 1.25rem;
+    font-weight: 800;
     margin: 0;
-    color: var(--chic-accent);
 }
 
 .list-close {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.05);
     border: none;
-    color: #fff;
-    width: 32px;
-    height: 32px;
+    color: #000;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    font-size: 1.2rem;
-    cursor: pointer;
+    font-size: 1.4rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.list-close:hover {
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .app-grid {
@@ -1517,14 +1512,32 @@
     line-height: 1.6;
 }
 
+@keyframes slide-in-right {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-out-right {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
 @keyframes fade-in-overlay {
     from {
         opacity: 0;
-        transform: translateY(20px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
