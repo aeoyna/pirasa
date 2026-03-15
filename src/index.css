@@ -1,16 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
-  --red: #ff3b30;
-  --red-glow: rgba(255, 59, 48, 0.25);
-  --bg: #000;
-  --surface: #111113;
-  --surface-2: #1c1c1f;
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #ffffff;
-  --text-2: rgba(255, 255, 255, 0.6);
-  --text-3: rgba(255, 255, 255, 0.3);
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --red: #ef4444;
+  --red-glow: rgba(239, 68, 68, 0.15);
+  --bg: #f3f4f6;
+  --bg-2: #ffffff;
+  --surface: rgba(255, 255, 255, 0.9);
+  --surface-2: rgba(255, 255, 255, 0.95);
+  --border: rgba(0, 0, 0, 0.08);
+  --text: #111827;
+  --text-2: rgba(17, 24, 39, 0.7);
+  --text-3: rgba(17, 24, 39, 0.4);
+  --accent: #2563eb;
+  --accent-2: #3b82f6;
+  --accent-glow: rgba(37, 99, 235, 0.2);
+  --accent-gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  --font: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Space Grotesk', 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 *,
@@ -27,13 +33,17 @@ body,
 #root {
   width: 100%;
   height: 100%;
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(37, 99, 235, 0.05), transparent 60%),
+    radial-gradient(900px 520px at 90% 0%, rgba(59, 130, 246, 0.05), transparent 55%),
+    var(--bg);
   color: var(--text);
   font-family: var(--font);
   overflow: hidden !important;
   -webkit-font-smoothing: antialiased;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  color-scheme: light;
 }
 
 #root::-webkit-scrollbar,
@@ -60,4 +70,36 @@ html::-webkit-scrollbar {
 .app-root {
   width: 100%;
   height: 100%;
+}
+
+body {
+  letter-spacing: 0.01em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(79, 209, 197, 0.35);
+  color: #0b0f14;
 }
