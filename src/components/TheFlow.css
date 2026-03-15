@@ -550,6 +550,7 @@
     align-items: center;
     justify-content: center;
     background: #fff;
+    scroll-snap-align: end;
 }
 
 .buffer-branding {
