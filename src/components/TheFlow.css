@@ -540,6 +540,7 @@
     box-shadow: none;
     transition: transform 0.3s ease;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
 }
 
 .slide-bottom-buffer {
@@ -552,6 +553,7 @@
     justify-content: center;
     background: #fff;
     scroll-snap-align: end;
+    scroll-snap-stop: always;
 }
 
 .buffer-branding {

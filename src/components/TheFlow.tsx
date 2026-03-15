@@ -85,8 +85,6 @@ export const TheFlow: React.FC<Props> = ({
     const [myPageTab, setMyPageTab] = useState<'saved' | 'posts' | 'new'>('saved');
     const [toast, setToast] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-    const [isNavVisible, setIsNavVisible] = useState(true);
-    const lastScrollTopRef = useRef<{ [key: string]: number }>({});
 
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
     const isAnimatingRef = useRef(false);
@@ -118,12 +116,21 @@ export const TheFlow: React.FC<Props> = ({
         }, 500);
     }, []);
 
+    // Reset scroll position of the current slide whenever activeIndex changes
+    useEffect(() => {
+        const slides = containerRef.current?.querySelectorAll('.slide');
+        if (slides && slides[resolvedActiveIndex]) {
+            (slides[resolvedActiveIndex] as HTMLElement).scrollTop = 0;
+        }
+    }, [resolvedActiveIndex]);
+
     const showToast = (msg: string) => {
         setToast(msg);
         setTimeout(() => setToast(null), 2000);
     };
+
     const handleVote = (type: 'up' | 'down') => {
-        const currentApp = apps[activeIndex];
+        const currentApp = apps[resolvedActiveIndex];
         if (!currentApp) return;
         if (type === 'up') {
             onIncrementLike(currentApp.id);
@@ -131,21 +138,6 @@ export const TheFlow: React.FC<Props> = ({
         } else if (type === 'down') {
             onDecrementLike(currentApp.id);
         }
-    };
-
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>, appId: string) => {
-        const scrollTop = e.currentTarget.scrollTop;
-        const prevScrollTop = lastScrollTopRef.current[appId] || 0;
-
-        if (Math.abs(scrollTop - prevScrollTop) < 15) return;
-
-        if (scrollTop > prevScrollTop && scrollTop > 60) {
-            if (isNavVisible) setIsNavVisible(false);
-        } else {
-            if (!isNavVisible) setIsNavVisible(true);
-        }
-
-        lastScrollTopRef.current[appId] = scrollTop;
     };
 
     const handleGestureStart = (y: number) => {
@@ -253,7 +245,7 @@ export const TheFlow: React.FC<Props> = ({
                     }}
                 >
                     {apps.map((app, index) => (
-                        <div key={app.id} className="slide" onScroll={(e) => handleScroll(e, app.id)}>
+                        <div key={app.id} className="slide">
                             {app.url === 'internal:home' ? (
                                 <HomeView />
                             ) : Math.abs(index - resolvedActiveIndex) <= 1 ? (
@@ -282,7 +274,7 @@ export const TheFlow: React.FC<Props> = ({
                                 <>
                                     <div className="sd-overlay" onClick={(e) => { e.stopPropagation(); setIsSmallDetailOpen(false); }} />
                                     <div
-                                        className={`small-detail-card ${!isNavVisible ? 'hidden' : ''}`}
+                                        className="small-detail-card"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setIsDetailOpen(true);
@@ -345,7 +337,7 @@ export const TheFlow: React.FC<Props> = ({
 
 
             {/* Bottom Navigation Bar */}
-            <nav className={`bottom-nav-bar ${!isNavVisible ? 'hidden' : ''}`}>
+            <nav className="bottom-nav-bar">
                 <button className="nav-item" onClick={() => setIsListOpen(true)}>
                     <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
