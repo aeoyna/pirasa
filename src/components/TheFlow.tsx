@@ -405,23 +405,6 @@ export const TheFlow: React.FC<Props> = ({
                             </div>
                         </div>
 
-                        {/* Top Action Buttons (Reload / Visit) */}
-                        <div className="ds-actions-grid">
-                            <button className="ds-btn-secondary" onClick={() => {
-                                if (iframeRefs.current[currentApp.id]) {
-                                    iframeRefs.current[currentApp.id]!.src = currentApp.url;
-                                    setIsDetailOpen(false);
-                                }
-                            }}>
-                                サイト再読込
-                            </button>
-                            <button className="sd-play-btn ds-visit-btn" onClick={() => {
-                                window.open(currentApp.url, '_blank');
-                            }}>
-                                🚀 Visit
-                            </button>
-                        </div>
-
                         {/* Action Buttons Unified */}
                         <div className="ds-action-bar">
                             <div className="sd-stats" style={{ width: '100%', justifyContent: 'space-between', padding: '0 8px' }}>
@@ -430,12 +413,33 @@ export const TheFlow: React.FC<Props> = ({
                                     <span className="sd-vote-count">{currentApp.likesCount || 0}</span>
                                     <button className={`sd-vote-btn ${userVotesMap[currentApp.id] === -1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
                                 </div>
-                                <span
-                                    className={`sd-save-btn ${savedAppIds.includes(currentApp.id) ? 'active' : ''}`}
-                                    onClick={(e) => { e.stopPropagation(); onToggleSave(currentApp.id); }}
-                                >
-                                    ★
-                                </span>
+
+                                <div className="ds-action-right-group">
+                                    <button className="ds-reload-btn" onClick={() => {
+                                        if (iframeRefs.current[currentApp.id]) {
+                                            iframeRefs.current[currentApp.id]!.src = currentApp.url;
+                                            setIsDetailOpen(false);
+                                        }
+                                    }}>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-svg">
+                                            <path d="M23 4v6h-6"></path>
+                                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                        </svg>
+                                    </button>
+
+                                    <span
+                                        className={`sd-save-btn ${savedAppIds.includes(currentApp.id) ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); onToggleSave(currentApp.id); }}
+                                    >
+                                        ★
+                                    </span>
+
+                                    <button className="ds-visit-btn-pill" onClick={() => {
+                                        window.open(currentApp.url, '_blank');
+                                    }}>
+                                        🚀 Visit
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
