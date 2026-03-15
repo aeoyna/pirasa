@@ -515,7 +515,8 @@
     background: #fff;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
+    scroll-padding-bottom: 140px;
 }
 
 .slide-content {
@@ -523,6 +524,10 @@
     flex-direction: column;
     width: 100%;
     min-height: 100%;
+}
+
+.home-view {
+    scroll-snap-align: start;
 }
 
 .app-iframe {
