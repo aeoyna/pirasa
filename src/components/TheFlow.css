@@ -54,6 +54,12 @@
     border-radius: 28px;
     z-index: 20000;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.bottom-nav-bar.hidden {
+    transform: translateY(140%) scale(0.9);
+    opacity: 0;
 }
 
 .nav-item {
@@ -133,6 +139,12 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     animation: slideUpIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.small-detail-card.hidden {
+    transform: translateY(180%) scale(0.9);
+    opacity: 0;
 }
 
 @keyframes slideUpIn {
