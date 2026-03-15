@@ -241,14 +241,17 @@ export const TheFlow: React.FC<Props> = ({
                             {app.url === 'internal:home' ? (
                                 <HomeView />
                             ) : Math.abs(index - resolvedActiveIndex) <= 1 ? (
-                                <iframe
-                                    ref={el => { iframeRefs.current[app.id] = el; }}
-                                    src={app.url}
-                                    title={app.name}
-                                    className="app-iframe"
-                                    loading={index === resolvedActiveIndex ? 'eager' : 'lazy'}
-                                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                />
+                                <div className="iframe-wrapper">
+                                    <iframe
+                                        ref={el => { iframeRefs.current[app.id] = el; }}
+                                        src={app.url}
+                                        title={app.name}
+                                        className="app-iframe"
+                                        loading={index === resolvedActiveIndex ? 'eager' : 'lazy'}
+                                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                    />
+                                    <div className="iframe-spacer" />
+                                </div>
                             ) : (
                                 <div className="slide-placeholder" />
                             )}
