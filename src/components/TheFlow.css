@@ -52,7 +52,7 @@
     align-items: center;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 28px;
-    z-index: 20000;
+    z-index: 50000;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 }
 
@@ -610,6 +610,15 @@
         opacity: 1;
         transform: scale(1) translateY(0);
     }
+}
+
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 24px 24px 120px 24px;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .tutorial-grid {
@@ -1309,6 +1318,7 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
+    padding-bottom: 120px;
 }
 
 .app-card {
