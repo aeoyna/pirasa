@@ -153,8 +153,7 @@ export const TheFlow: React.FC<Props> = ({
 
     useEffect(() => {
         const nav = containerRef.current?.querySelector('.bottom-nav-bar');
-        const view = containerRef.current?.querySelector('.view-container');
-        const gestureTargets = Array.from(new Set([nav, view].filter(Boolean))) as Element[];
+        const gestureTargets = [nav].filter(Boolean) as Element[];
         if (gestureTargets.length === 0) return;
 
         const onStart = (e: TouchEvent | MouseEvent) => {
@@ -172,7 +171,7 @@ export const TheFlow: React.FC<Props> = ({
             if (isAnimatingRef.current || wheelTimeout) return;
 
             // Normalize deltaY for trackpad sensitivity
-            const sensitivity = 10;
+            const sensitivity = 30;
             if (Math.abs(e.deltaY) > sensitivity) {
                 e.preventDefault();
                 if (e.deltaY > 0) {
@@ -183,7 +182,7 @@ export const TheFlow: React.FC<Props> = ({
 
                 wheelTimeout = setTimeout(() => {
                     wheelTimeout = null;
-                }, 600);
+                }, 800);
             }
         };
 
@@ -306,18 +305,9 @@ export const TheFlow: React.FC<Props> = ({
                                                     </button>
                                                 </div>
                                                 <div className="sd-vote-group">
-                                                    <button className={`sd-vote-btn sd-up ${userVotesMap[app.id] === 1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="vote-icon">
-                                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                                        </svg>
-                                                    </button>
+                                                    <button className={`sd-vote-btn ${userVotesMap[app.id] === 1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
                                                     <span className="sd-vote-count">{app.likesCount || 0}</span>
-                                                    <button className={`sd-vote-btn sd-down ${userVotesMap[app.id] === -1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="vote-icon">
-                                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                                        </svg>
-                                                    </button>
+                                                    <button className={`sd-vote-btn ${userVotesMap[app.id] === -1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -418,18 +408,9 @@ export const TheFlow: React.FC<Props> = ({
                         <div className="ds-action-bar">
                             <div className="sd-stats" style={{ width: '100%', justifyContent: 'space-between', padding: '0 8px' }}>
                                 <div className="sd-vote-group">
-                                    <button className={`sd-vote-btn sd-up ${userVotesMap[currentApp.id] === 1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="vote-icon">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                    </button>
+                                    <button className={`sd-vote-btn ${userVotesMap[currentApp.id] === 1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('up'); }}>+</button>
                                     <span className="sd-vote-count">{currentApp.likesCount || 0}</span>
-                                    <button className={`sd-vote-btn sd-down ${userVotesMap[currentApp.id] === -1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="vote-icon">
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                    </button>
+                                    <button className={`sd-vote-btn ${userVotesMap[currentApp.id] === -1 ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); handleVote('down'); }}>-</button>
                                 </div>
 
                                 <div className="ds-action-right-group">
