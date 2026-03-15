@@ -102,6 +102,12 @@ export const TheFlow: React.FC<Props> = ({
 
     useEffect(() => {
         if (activeIndex >= total && total > 0) setActiveIndex(total - 1);
+
+        // Reset all slides scroll position to top when switching
+        const slides = containerRef.current?.querySelectorAll('.slide');
+        slides?.forEach(slide => {
+            slide.scrollTop = 0;
+        });
     }, [total, activeIndex]);
 
     const goTo = useCallback((nextIndex: number) => {
