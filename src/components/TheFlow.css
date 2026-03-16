@@ -3,8 +3,8 @@
     --chic-accent: #d97706;
     --chic-accent-vibrant: #fbbf24;
     --chic-text: #111827;
-    --chic-glass: rgba(255, 255, 255, 0.7);
-    --chic-border: rgba(0, 0, 0, 0.08);
+    --chic-glass: rgba(255, 255, 255, 0.4);
+    --chic-border: rgba(0, 0, 0, 0.06);
     --chic-blur: blur(24px) saturate(200%);
     --brand-bg: #ffffff;
 }
@@ -48,9 +48,9 @@
     max-width: 320px;
     height: 64px;
     padding: 0 12px;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.4);
     backdrop-filter: var(--chic-blur);
-    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: var(--chic-blur);
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -757,8 +757,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
     z-index: 30000;
     display: flex;
     align-items: center;
@@ -1103,7 +1103,9 @@
     left: 0;
     width: 100vw;
     height: 100dvh;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: var(--chic-blur);
+    -webkit-backdrop-filter: var(--chic-blur);
     z-index: 25000;
     display: flex;
     justify-content: flex-end;
@@ -1113,7 +1115,9 @@
 .list-container {
     width: 100%;
     height: 100%;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
