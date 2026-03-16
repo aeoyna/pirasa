@@ -102,6 +102,12 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
         }
     };
 
+    const inputStyle: React.CSSProperties = {
+        background: 'rgba(0, 0, 0, 0.06)',
+        border: '1px solid rgba(0, 0, 0, 0.15)',
+        color: '#000',
+    };
+
     if (!user) {
         return (
             <div className="mypage-overlay panel-slide-in">
@@ -214,19 +220,19 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                         <form className="post-site-form" onSubmit={handlePostSite}>
                             <div className="form-group">
                                 <label>Site Name</label>
-                                <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Saturn" />
+                                <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Saturn" style={inputStyle} />
                             </div>
                             <div className="form-group">
                                 <label>URL</label>
-                                <input type="url" value={url} onChange={e => setUrl(e.target.value)} required placeholder="https://..." />
+                                <input type="url" value={url} onChange={e => setUrl(e.target.value)} required placeholder="https://..." style={inputStyle} />
                             </div>
                             <div className="form-group">
                                 <label>Tagline</label>
-                                <input type="text" value={tagline} onChange={e => setTagline(e.target.value)} required placeholder="Short catchphrase" />
+                                <input type="text" value={tagline} onChange={e => setTagline(e.target.value)} required placeholder="Short catchphrase" style={inputStyle} />
                             </div>
                             <div className="form-group">
                                 <label>Merit (Benefit)</label>
-                                <textarea value={merit} onChange={e => setMerit(e.target.value)} required placeholder="Explain why someone should use this..." rows={3} />
+                                <textarea value={merit} onChange={e => setMerit(e.target.value)} required placeholder="Explain why someone should use this..." rows={3} style={inputStyle} />
                             </div>
                             <div className="form-actions">
                                 <button type="submit" className="submit-post-btn" disabled={isSubmitting}>
