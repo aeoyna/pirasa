@@ -91,7 +91,7 @@ input,
 textarea,
 select {
   font-family: inherit;
-  color: inherit;
+  color: #000 !important;
 }
 
 a {
