@@ -11,10 +11,11 @@ interface MyPageProps {
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<{ success: boolean; error?: string } | void>;
     onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
     onRemoveSite: (id: string) => Promise<void>;
+    onResetSeen: () => void;
     initialTab?: 'saved' | 'posts' | 'new';
 }
 
-export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps, onAddSite, onUpdateSite, onRemoveSite, initialTab }) => {
+export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps, onAddSite, onUpdateSite, onRemoveSite, onResetSeen, initialTab }) => {
     const { user, signInWithGoogle, signOut, updateUsername } = useAuth();
     const [activeTab, setActiveTab] = useState<'saved' | 'posts' | 'new'>(initialTab || 'saved');
 
@@ -181,7 +182,12 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                             </div>
                         )}
                         {nameError && <span className="username-error">{nameError}</span>}
-                        <button className="sign-out-btn" onClick={signOut}>Sign Out</button>
+                        <div className="profile-actions-row">
+                            <button className="sign-out-btn" onClick={signOut}>Sign Out</button>
+                            <button className="reset-seen-btn" onClick={() => { if (window.confirm('閲覧履歴をリセットして全てのサイトを再表示しますか？')) { onResetSeen(); onClose(); } }} title="閲覧履歴をリセット">
+                                🔄 履歴リセット
+                            </button>
+                        </div>
                     </div>
                 </div>
 

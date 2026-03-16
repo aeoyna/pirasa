@@ -60,6 +60,8 @@ interface Props {
     onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
     onRemoveSite: (id: string) => Promise<void>;
     onIncrementView: (id: string) => void;
+    onMarkAsSeen: (id: string) => void;
+    onResetSeen: () => void;
     userVotesMap: { [id: string]: number };
 }
 
@@ -77,6 +79,8 @@ export const TheFlow: React.FC<Props> = ({
     onUpdateSite,
     onRemoveSite,
     onIncrementView,
+    onMarkAsSeen,
+    onResetSeen,
     userVotesMap
 }) => {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -128,12 +132,14 @@ export const TheFlow: React.FC<Props> = ({
             (slides[resolvedActiveIndex] as HTMLElement).scrollTop = 0;
         }
 
-        // Increment view count when active index changes
+        // Increment view count and mark as seen when active index changes
         const currentApp = apps[resolvedActiveIndex];
         if (currentApp && currentApp.url !== 'internal:home') {
             onIncrementView(currentApp.id);
+            // Mark as seen after a delay or on change
+            onMarkAsSeen(currentApp.id);
         }
-    }, [resolvedActiveIndex, apps, onIncrementView]);
+    }, [resolvedActiveIndex, apps, onIncrementView, onMarkAsSeen]);
 
     const showToast = (msg: string) => {
         setToast(msg);
@@ -609,6 +615,7 @@ export const TheFlow: React.FC<Props> = ({
                             showToast('Site updated! ✨');
                         }}
                         onRemoveSite={onRemoveSite}
+                        onResetSeen={onResetSeen}
                     />
                 )
             }

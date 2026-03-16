@@ -149,6 +149,37 @@
     flex: 1;
 }
 
+.profile-actions-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.reset-seen-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #444;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.reset-seen-btn:hover {
+    background: rgba(255, 0, 0, 0.05);
+    border-color: rgba(255, 0, 0, 0.2);
+    color: #d32f2f;
+}
+
+.reset-seen-btn:active {
+    transform: scale(0.98);
+}
+
 .user-name {
     font-weight: 600;
     font-size: 1.1rem;

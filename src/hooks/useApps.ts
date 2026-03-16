@@ -13,6 +13,7 @@ export interface AppMeta {
     views?: number;
     created_by?: string;
     poster_name?: string;
+    created_at?: string;
 }
 
 export const GENRES = [
@@ -24,6 +25,7 @@ export const GENRES = [
 const STORAGE_KEY = 'pirasa_apps_v12';
 const DEVICE_ID_KEY = 'pirasa_device_id';
 const SAVED_APPS_KEY = 'pirasa_saved_apps';
+const SEEN_APPS_KEY = 'pirasa_seen_apps_v1';
 
 export function useApps(userId?: string) {
     const [apps, setApps] = useState<AppMeta[]>([]);
@@ -32,6 +34,7 @@ export function useApps(userId?: string) {
     const [loading, setLoading] = useState(true);
     const [deviceId, setDeviceId] = useState<string>('');
     const [savedAppIds, setSavedAppIds] = useState<string[]>([]);
+    const [seenAppIds, setSeenAppIds] = useState<string[]>([]);
 
     // Initialize Device ID and Saved Apps + Load cached apps
     useEffect(() => {
@@ -48,6 +51,15 @@ export function useApps(userId?: string) {
                 setSavedAppIds(JSON.parse(saved));
             } catch (e) {
                 setSavedAppIds([]);
+            }
+        }
+
+        const seen = localStorage.getItem(SEEN_APPS_KEY);
+        if (seen) {
+            try {
+                setSeenAppIds(JSON.parse(seen));
+            } catch (e) {
+                setSeenAppIds([]);
             }
         }
 
@@ -257,13 +269,36 @@ export function useApps(userId?: string) {
         likesCount: likesMap[app.id] || 0
     }));
 
-    // Keep stable order: Home first, then insertion order.
-    // DO NOT sort by likesCount here — it would cause activeIndex to point
-    // to a different app after every vote, making counts appear not to change.
-    const sortedApps = appsWithLikes.sort((a, b) => {
+    // Discovery Algorithm: "Pirasa Rank"
+    // Score = Engagement / (TimeDecay + 2)^1.8 * RandomFactor
+    const sortedApps = [...appsWithLikes].sort((a, b) => {
+        // Home always first
         if (a.url === 'internal:home') return -1;
         if (b.url === 'internal:home') return 1;
-        return 0; // preserve insertion order for all other apps
+
+        const getScore = (item: any) => {
+            const likes = item.likesCount || 0;
+            const views = item.views || 0;
+            const engagement = (likes * 15) + (views * 1);
+
+            // Time decay (Hours since creation)
+            const created = item.created_at ? new Date(item.created_at).getTime() : Date.now();
+            const hoursOld = (Date.now() - created) / (1000 * 60 * 60);
+
+            // Random jitter (±10% to keep feed fresh)
+            const jitter = 0.9 + Math.random() * 0.2;
+
+            return (engagement / Math.pow(hoursOld + 2, 1.8)) * jitter;
+        };
+
+        return getScore(b) - getScore(a);
+    }).filter(app => {
+        // Always show Home
+        if (app.url === 'internal:home') return true;
+        // Always show Saved
+        if (savedAppIds.includes(app.id)) return true;
+        // Hide if seen
+        return !seenAppIds.includes(app.id);
     });
 
     const addApp = async (app: Omit<AppMeta, 'id'>) => {
@@ -425,11 +460,27 @@ export function useApps(userId?: string) {
         }
     };
 
+    const markAsSeen = (id: string) => {
+        if (id === 'home') return;
+        setSeenAppIds(prev => {
+            if (prev.includes(id)) return prev;
+            const next = [...prev, id];
+            localStorage.setItem(SEEN_APPS_KEY, JSON.stringify(next));
+            return next;
+        });
+    };
+
+    const resetSeen = () => {
+        setSeenAppIds([]);
+        localStorage.removeItem(SEEN_APPS_KEY);
+    };
+
     return {
         apps: sortedApps,
         loading,
         deviceId,
         savedAppIds,
+        seenAppIds,
         addApp,
         updateApp,
         removeApp,
@@ -438,6 +489,8 @@ export function useApps(userId?: string) {
         incrementLike,
         decrementLike,
         toggleSave,
+        markAsSeen,
+        resetSeen,
         userVotesMap
     };
 }
