@@ -343,7 +343,7 @@ export const TheFlow: React.FC<Props> = ({
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <span className="nav-label">検索</span>
+                    <span className="nav-label">さがす</span>
                 </button>
                 <button className="nav-item" onClick={() => setIsBoardOpen(true)}>
                     <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -353,28 +353,6 @@ export const TheFlow: React.FC<Props> = ({
                         <rect x="3" y="14" width="7" height="7"></rect>
                     </svg>
                     <span className="nav-label">掲示板</span>
-                </button>
-                <button className="nav-item post-highlight" onClick={() => { setIsMyPageOpen(true); setMyPageTab('new'); }}>
-                    <div className="post-icon-wrapper">
-                        <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    </div>
-                    <span className="nav-label">投稿</span>
-                </button>
-                <button
-                    className={`nav-item ${isSmallDetailOpen ? 'active' : ''}`}
-                    onClick={() => setIsSmallDetailOpen(true)}
-                >
-                    <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                    <span className="nav-label">詳細</span>
                 </button>
                 <button className="nav-item" onClick={() => { setIsMyPageOpen(true); setMyPageTab('saved'); }}>
                     <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
