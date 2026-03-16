@@ -239,6 +239,15 @@ export function useApps(userId?: string) {
     });
 
     const addApp = async (app: Omit<AppMeta, 'id'>) => {
+        // Normalize URL for comparison
+        const normalize = (u: string) => u.replace(/\/+$/, '').toLowerCase();
+        const newUrlNormalized = normalize(app.url);
+
+        const isDuplicate = apps.some(a => normalize(a.url) === newUrlNormalized);
+        if (isDuplicate) {
+            return { success: false, error: 'このサイトは既に登録されています。' };
+        }
+
         const id = crypto.randomUUID();
         const newApp = { ...app, id, created_by: userId || deviceId };
 
@@ -248,7 +257,9 @@ export function useApps(userId?: string) {
         const { error } = await supabase.from('apps').insert([newApp]);
         if (error) {
             console.error('Error adding app to Supabase:', error);
+            return { success: false, error: '登録中にエラーが発生しました。' };
         }
+        return { success: true };
     };
 
     const updateApp = async (id: string, app: Omit<AppMeta, 'id'>) => {

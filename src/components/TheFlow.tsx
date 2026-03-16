@@ -563,8 +563,11 @@ export const TheFlow: React.FC<Props> = ({
                         savedApps={apps.filter(a => savedAppIds.includes(a.id))}
                         myPostedApps={apps.filter(a => a.created_by === deviceId || (userId && a.created_by === userId))}
                         onAddSite={async (appData) => {
-                            await onAddSite(appData);
-                            showToast('Site posted! 🚀');
+                            const result = await onAddSite(appData);
+                            if (result && (result as any).success !== false) {
+                                showToast('Site posted! 🚀');
+                            }
+                            return result;
                         }}
                         onUpdateSite={async (id, appData) => {
                             await onUpdateSite(id, appData);

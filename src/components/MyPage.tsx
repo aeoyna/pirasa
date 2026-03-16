@@ -7,7 +7,7 @@ interface MyPageProps {
     onClose: () => void;
     savedApps: AppMeta[];
     myPostedApps: AppMeta[];
-    onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<void>;
+    onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<{ success: boolean; error?: string } | void>;
     onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
     initialTab?: 'saved' | 'posts' | 'new';
 }
@@ -83,7 +83,11 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                 await onUpdateSite(editingApp.id, appData);
                 setEditingApp(null);
             } else {
-                await onAddSite(appData);
+                const result = await onAddSite(appData);
+                if (result && (result as any).success === false) {
+                    alert((result as any).error || '登録に失敗しました');
+                    return;
+                }
             }
 
             setName('');
