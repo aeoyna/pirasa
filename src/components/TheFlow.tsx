@@ -89,6 +89,7 @@ export const TheFlow: React.FC<Props> = ({
     const [myPageTab, setMyPageTab] = useState<'saved' | 'posts' | 'new'>('saved');
     const [toast, setToast] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+    const [dragY, setDragY] = useState(0);
 
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
     const isAnimatingRef = useRef(false);
@@ -154,11 +155,18 @@ export const TheFlow: React.FC<Props> = ({
         touchStart.current = { y, time: Date.now() };
     };
 
+    const handleGestureMove = (y: number) => {
+        if (!touchStart.current) return;
+        const deltaY = y - touchStart.current.y;
+        setDragY(deltaY);
+    };
+
     const handleGestureEnd = (y: number) => {
         if (!touchStart.current) return;
         const deltaY = y - touchStart.current.y;
         const deltaTime = Date.now() - touchStart.current.time;
         touchStart.current = null;
+        setDragY(0);
 
         if (Math.abs(deltaY) > SWIPE_THRESHOLD && deltaTime < 500) {
             if (deltaY < 0) {
@@ -177,6 +185,11 @@ export const TheFlow: React.FC<Props> = ({
         const onStart = (e: TouchEvent | MouseEvent) => {
             const y = 'touches' in e ? e.touches[0].clientY : e.clientY;
             handleGestureStart(y);
+        };
+
+        const onMove = (e: any) => {
+            const y = e.touches ? e.touches[0].clientY : (e.changedTouches ? e.changedTouches[0].clientY : e.clientY);
+            handleGestureMove(y);
         };
 
         const onEnd = (e: TouchEvent | MouseEvent) => {
@@ -207,6 +220,8 @@ export const TheFlow: React.FC<Props> = ({
         gestureTargets.forEach(target => {
             target.addEventListener('touchstart', onStart as any);
             target.addEventListener('mousedown', onStart as any);
+            target.addEventListener('touchmove', onMove as any);
+            target.addEventListener('mousemove', onMove as any);
             target.addEventListener('wheel', onWheel as any, { passive: false });
         });
         window.addEventListener('touchend', onEnd as any);
@@ -216,6 +231,8 @@ export const TheFlow: React.FC<Props> = ({
             gestureTargets.forEach(target => {
                 target.removeEventListener('touchstart', onStart as any);
                 target.removeEventListener('mousedown', onStart as any);
+                target.removeEventListener('touchmove', onMove as any);
+                target.removeEventListener('mousemove', onMove as any);
                 target.removeEventListener('wheel', onWheel as any);
             });
             window.removeEventListener('touchend', onEnd as any);
@@ -347,11 +364,21 @@ export const TheFlow: React.FC<Props> = ({
 
 
             {/* Bottom Navigation Bar */}
-            <nav className="bottom-nav-bar">
+            {/* Action Bar (persistent at bottom) */}
+            <nav
+                className="bottom-nav-bar"
+                style={{
+                    transform: `translateX(-50%) translateY(${dragY * 0.15}px)`,
+                    transition: dragY === 0 ? 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
+                }}
+            >
                 <button className="nav-item" onClick={() => setIsListOpen(true)}>
                     <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                        <path d="M5 3L4 4"></path>
+                        <path d="M19 3l1 1"></path>
+                        <path d="m5 21 1-1"></path>
+                        <path d="M19 21l1-1"></path>
                     </svg>
                     <span className="nav-label">さがす</span>
                 </button>
@@ -469,7 +496,6 @@ export const TheFlow: React.FC<Props> = ({
 
                         {/* Analysis Content */}
                         <div className="ds-content-section">
-                            <p className="ds-section-title">pirasa の目利き</p>
                             <div className="ds-analysis">
                                 {currentApp.analysis.map((line, i) => (
                                     <div key={i} className="ds-analysis-line">{line}</div>
