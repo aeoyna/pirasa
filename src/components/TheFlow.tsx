@@ -56,7 +56,7 @@ interface Props {
     onIncrementLike: (id: string) => void;
     onDecrementLike: (id: string) => void;
     onToggleSave: (id: string) => void;
-    onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<void>;
+    onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<{ success: boolean; error?: string } | void>;
     onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
     userVotesMap: { [id: string]: number };
 }
@@ -542,7 +542,7 @@ export const TheFlow: React.FC<Props> = ({
                         myPostedApps={apps.filter(a => a.created_by === deviceId || (userId && a.created_by === userId))}
                         onAddSite={async (appData) => {
                             const result = await onAddSite(appData);
-                            if (result && (result as any).success !== false) {
+                            if (!result || result.success !== false) {
                                 showToast('Site posted! 🚀');
                             }
                             return result;
