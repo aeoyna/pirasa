@@ -10,6 +10,7 @@ export interface AppMeta {
     merit: string;
     genre?: string;
     likesCount?: number;
+    views?: number;
     created_by?: string;
     poster_name?: string;
 }
@@ -290,6 +291,27 @@ export function useApps(userId?: string) {
         }
     };
 
+    const incrementView = async (id: string) => {
+        // Optimistic UI update
+        setApps(prev => prev.map(a => a.id === id ? { ...a, views: (a.views || 0) + 1 } : a));
+
+        // Supabase update using RPC function for atomic increment
+        // Assuming the user has run the SQL from the implementation plan
+        const { error } = await supabase.rpc('increment_views', { row_id: id });
+
+        if (error) {
+            console.warn('RPC increment_views failed, falling back to simple update:', error);
+            // Fallback: get current count and update
+            const targetApp = apps.find(a => a.id === id);
+            if (targetApp) {
+                await supabase
+                    .from('apps')
+                    .update({ views: (targetApp.views || 0) + 1 })
+                    .eq('id', id);
+            }
+        }
+    };
+
     const reorder = (from: number, to: number) => {
         setApps(prev => {
             const next = [...prev];
@@ -384,6 +406,7 @@ export function useApps(userId?: string) {
         addApp,
         updateApp,
         removeApp,
+        incrementView,
         reorder,
         incrementLike,
         decrementLike,

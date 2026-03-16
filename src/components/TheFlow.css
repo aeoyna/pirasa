@@ -40,7 +40,7 @@
 /* ─── Bottom Navigation Bar ────────────────────────────── */
 .bottom-nav-bar {
     position: fixed;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: auto;
@@ -101,7 +101,7 @@
 /* ─── Small Detail Card ────────────────────────────────── */
 .small-detail-card {
     position: absolute;
-    bottom: calc(105px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     /* Above Floating BottomNavBar */
     left: 15px;
     right: 15px;
@@ -1397,7 +1397,7 @@
 .floating-info-btn {
     position: fixed;
     right: 15px;
-    bottom: calc(105px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     width: 48px;
     height: 48px;
     border-radius: 50%;

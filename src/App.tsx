@@ -18,6 +18,7 @@ function App() {
     removeApp,
     incrementLike,
     decrementLike,
+    incrementView,
     toggleSave,
     userVotesMap
   } = useApps(user?.id)
@@ -48,6 +49,7 @@ function App() {
         onAddSite={addApp}
         onUpdateSite={updateApp}
         onRemoveSite={removeApp}
+        onIncrementView={incrementView}
         userVotesMap={userVotesMap}
       />
       {adminOpen && (

@@ -59,6 +59,7 @@ interface Props {
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<{ success: boolean; error?: string } | void>;
     onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
     onRemoveSite: (id: string) => Promise<void>;
+    onIncrementView: (id: string) => void;
     userVotesMap: { [id: string]: number };
 }
 
@@ -75,6 +76,7 @@ export const TheFlow: React.FC<Props> = ({
     onAddSite,
     onUpdateSite,
     onRemoveSite,
+    onIncrementView,
     userVotesMap
 }) => {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -124,7 +126,13 @@ export const TheFlow: React.FC<Props> = ({
         if (slides && slides[resolvedActiveIndex]) {
             (slides[resolvedActiveIndex] as HTMLElement).scrollTop = 0;
         }
-    }, [resolvedActiveIndex]);
+
+        // Increment view count when active index changes
+        const currentApp = apps[resolvedActiveIndex];
+        if (currentApp && currentApp.url !== 'internal:home') {
+            onIncrementView(currentApp.id);
+        }
+    }, [resolvedActiveIndex, apps, onIncrementView]);
 
     const showToast = (msg: string) => {
         setToast(msg);

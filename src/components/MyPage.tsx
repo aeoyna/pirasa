@@ -48,6 +48,7 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
     const [url, setUrl] = useState('');
     const [tagline, setTagline] = useState('');
     const [merit, setMerit] = useState('');
+    const [genre, setGenre] = useState('ツール');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const startEdit = (app: AppMeta) => {
@@ -56,6 +57,7 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
         setUrl(app.url);
         setTagline(app.tagline);
         setMerit(app.merit);
+        setGenre(app.genre || 'ツール');
         setActiveTab('new');
     };
 
@@ -65,6 +67,7 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
         setUrl('');
         setTagline('');
         setMerit('');
+        setGenre('ツール');
     };
 
     const handlePostSite = async (e: React.FormEvent) => {
@@ -77,7 +80,7 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                 tagline,
                 merit,
                 analysis: editingApp ? editingApp.analysis : [],
-                genre: editingApp ? editingApp.genre : "ツール",
+                genre: editingApp ? genre : genre, // Using the state variable
                 poster_name: editingApp ? editingApp.poster_name : (displayName || '匿名')
             };
 
@@ -257,6 +260,18 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                             <div className="form-group">
                                 <label>Merit (Benefit)</label>
                                 <textarea value={merit} onChange={e => setMerit(e.target.value)} required placeholder="Explain why someone should use this..." rows={3} style={inputStyle} />
+                            </div>
+                            <div className="form-group">
+                                <label>Genre</label>
+                                <select
+                                    value={genre}
+                                    onChange={e => setGenre(e.target.value)}
+                                    style={inputStyle}
+                                >
+                                    <option value="ツール">ツール</option>
+                                    <option value="ミーム">ミーム</option>
+                                    <option value="ゲーム">ゲーム</option>
+                                </select>
                             </div>
                             <div className="form-actions">
                                 <button type="submit" className="submit-post-btn" disabled={isSubmitting}>
