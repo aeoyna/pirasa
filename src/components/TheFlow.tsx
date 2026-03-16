@@ -58,6 +58,7 @@ interface Props {
     onToggleSave: (id: string) => void;
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<{ success: boolean; error?: string } | void>;
     onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
+    onRemoveSite: (id: string) => Promise<void>;
     userVotesMap: { [id: string]: number };
 }
 
@@ -73,6 +74,7 @@ export const TheFlow: React.FC<Props> = ({
     onToggleSave,
     onAddSite,
     onUpdateSite,
+    onRemoveSite,
     userVotesMap
 }) => {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -364,6 +366,27 @@ export const TheFlow: React.FC<Props> = ({
             </nav>
 
 
+            {/* Floating Info Trigger (appears when modal is closed) */}
+            {!isSmallDetailOpen && !isDetailOpen && currentApp.url !== 'internal:home' && (
+                <button
+                    className="floating-info-btn"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsSmallDetailOpen(true);
+                    }}
+                >
+                    {imageErrors.has(currentApp.id) ? (
+                        <div className="fi-icon-placeholder">✦</div>
+                    ) : (
+                        <img
+                            src={`https://www.google.com/s2/favicons?sz=64&domain=${new URL(currentApp.url).hostname}`}
+                            alt=""
+                            onError={() => setImageErrors(prev => new Set(prev).add(currentApp.id))}
+                        />
+                    )}
+                </button>
+            )}
+
             {toast && <div className="pirasa-toast">{toast}</div>}
 
             {/* Detail overlay */}
@@ -551,6 +574,7 @@ export const TheFlow: React.FC<Props> = ({
                             await onUpdateSite(id, appData);
                             showToast('Site updated! ✨');
                         }}
+                        onRemoveSite={onRemoveSite}
                     />
                 )
             }

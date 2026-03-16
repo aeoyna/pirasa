@@ -47,6 +47,7 @@ function App() {
         onToggleSave={toggleSave}
         onAddSite={addApp}
         onUpdateSite={updateApp}
+        onRemoveSite={removeApp}
         userVotesMap={userVotesMap}
       />
       {adminOpen && (

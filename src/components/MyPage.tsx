@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import type { AppMeta } from '../hooks/useApps';
+import { checkIframeAllowed } from '../lib/iframeValidator';
 import './MyPage.css';
 
 interface MyPageProps {
@@ -9,10 +10,11 @@ interface MyPageProps {
     myPostedApps: AppMeta[];
     onAddSite: (app: Omit<AppMeta, 'id'>) => Promise<{ success: boolean; error?: string } | void>;
     onUpdateSite: (id: string, app: Omit<AppMeta, 'id'>) => Promise<void>;
+    onRemoveSite: (id: string) => Promise<void>;
     initialTab?: 'saved' | 'posts' | 'new';
 }
 
-export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps, onAddSite, onUpdateSite, initialTab }) => {
+export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps, onAddSite, onUpdateSite, onRemoveSite, initialTab }) => {
     const { user, signInWithGoogle, signOut, updateUsername } = useAuth();
     const [activeTab, setActiveTab] = useState<'saved' | 'posts' | 'new'>(initialTab || 'saved');
 
@@ -79,6 +81,16 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                 poster_name: editingApp ? editingApp.poster_name : (displayName || '匿名')
             };
 
+            // iframe check for new sites (not on edit, though you might want to check on edit too)
+            if (!editingApp) {
+                const check = await checkIframeAllowed(url);
+                if (!check.allowed) {
+                    alert(`このサイトは登録できません：\n${check.error || '埋め込みが禁止されています。'}`);
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
             if (editingApp) {
                 await onUpdateSite(editingApp.id, appData);
                 setEditingApp(null);
@@ -99,6 +111,12 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
             console.error(err);
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteSite = async (id: string, name: string) => {
+        if (window.confirm(`「${name}」を削除してもよろしいですか？`)) {
+            await onRemoveSite(id);
         }
     };
 
@@ -206,10 +224,16 @@ export const MyPage: React.FC<MyPageProps> = ({ onClose, savedApps, myPostedApps
                                             <div className="app-list-item-title">{app.name}</div>
                                             <div className="app-list-item-url">{app.url}</div>
                                         </div>
-                                        <button className="app-edit-btn" onClick={() => startEdit(app)}>
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                            編集
-                                        </button>
+                                        <div className="app-list-actions">
+                                            <button className="app-edit-btn" onClick={() => startEdit(app)}>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                編集
+                                            </button>
+                                            <button className="app-delete-btn" onClick={() => handleDeleteSite(app.id, app.name)}>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                                削除
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

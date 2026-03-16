@@ -3,7 +3,7 @@
     --chic-accent: #d97706;
     --chic-accent-vibrant: #fbbf24;
     --chic-text: #111827;
-    --chic-glass: rgba(255, 255, 255, 0.4);
+    --chic-glass: rgba(255, 255, 255, 0.2);
     --chic-border: rgba(0, 0, 0, 0.06);
     --chic-blur: blur(24px) saturate(200%);
     --brand-bg: #ffffff;
@@ -48,7 +48,7 @@
     max-width: 320px;
     height: 64px;
     padding: 0 12px;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: var(--chic-blur);
     -webkit-backdrop-filter: var(--chic-blur);
     display: flex;
@@ -1390,5 +1390,56 @@
 
     to {
         opacity: 1;
+    }
+}
+
+/* ─── Floating Info Button ────────────────────────────────── */
+.floating-info-btn {
+    position: fixed;
+    right: 15px;
+    bottom: calc(105px + env(safe-area-inset-bottom, 0px));
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--chic-glass);
+    backdrop-filter: var(--chic-blur);
+    -webkit-backdrop-filter: var(--chic-blur);
+    border: 1px solid var(--chic-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 24000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fi-bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.floating-info-btn:active {
+    transform: scale(0.9);
+}
+
+.floating-info-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
+}
+
+.fi-icon-placeholder {
+    font-size: 1.2rem;
+    color: var(--chic-accent);
+}
+
+@keyframes fi-bounceIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5) translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateX(0);
     }
 }
