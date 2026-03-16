@@ -196,15 +196,42 @@ export function useApps(userId?: string) {
         if (hasUrl && hasKey) {
             const statsChannel = supabase
                 .channel('user_votes_changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'user_votes' }, () => {
-                    fetchLikes();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'user_votes' }, (payload: any) => {
+                    if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                        const { app_id, vote_value } = payload.new as any;
+                        const oldRow = payload.old as any;
+                        const diff = oldRow ? (vote_value - (oldRow.vote_value || 0)) : vote_value;
+
+                        setLikesMap(prev => ({
+                            ...prev,
+                            [app_id]: (prev[app_id] || 0) + diff
+                        }));
+                    } else if (payload.eventType === 'DELETE') {
+                        const { app_id, vote_value } = payload.old as any;
+                        setLikesMap(prev => ({
+                            ...prev,
+                            [app_id]: (prev[app_id] || 0) - (vote_value || 0)
+                        }));
+                    }
                 })
                 .subscribe();
 
             const appsChannel = supabase
                 .channel('apps_changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'apps' }, () => {
-                    fetchApps();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'apps' }, (payload: any) => {
+                    if (payload.eventType === 'UPDATE') {
+                        const updatedApp = payload.new as AppMeta;
+                        setApps(prev => prev.map(a => a.id === updatedApp.id ? { ...a, ...updatedApp } : a));
+                    } else if (payload.eventType === 'INSERT') {
+                        const newApp = payload.new as AppMeta;
+                        setApps(prev => {
+                            if (prev.some(a => a.id === newApp.id)) return prev;
+                            return [newApp, ...prev];
+                        });
+                    } else if (payload.eventType === 'DELETE') {
+                        const deletedId = (payload.old as any).id;
+                        setApps(prev => prev.filter(a => a.id !== deletedId));
+                    }
                 })
                 .subscribe();
 

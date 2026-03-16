@@ -89,7 +89,7 @@ export const TheFlow: React.FC<Props> = ({
     const [myPageTab, setMyPageTab] = useState<'saved' | 'posts' | 'new'>('saved');
     const [toast, setToast] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-    const [dragY, setDragY] = useState(0);
+    const navRef = useRef<HTMLElement | null>(null);
 
     const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
     const isAnimatingRef = useRef(false);
@@ -156,9 +156,10 @@ export const TheFlow: React.FC<Props> = ({
     };
 
     const handleGestureMove = (y: number) => {
-        if (!touchStart.current) return;
+        if (!touchStart.current || !navRef.current) return;
         const deltaY = y - touchStart.current.y;
-        setDragY(deltaY);
+        navRef.current.style.transform = `translateX(-50%) translateY(${deltaY * 0.15}px)`;
+        navRef.current.style.transition = 'none';
     };
 
     const handleGestureEnd = (y: number) => {
@@ -166,7 +167,11 @@ export const TheFlow: React.FC<Props> = ({
         const deltaY = y - touchStart.current.y;
         const deltaTime = Date.now() - touchStart.current.time;
         touchStart.current = null;
-        setDragY(0);
+
+        if (navRef.current) {
+            navRef.current.style.transform = 'translateX(-50%) translateY(0)';
+            navRef.current.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+        }
 
         if (Math.abs(deltaY) > SWIPE_THRESHOLD && deltaTime < 500) {
             if (deltaY < 0) {
@@ -363,14 +368,9 @@ export const TheFlow: React.FC<Props> = ({
             </div>
 
 
-            {/* Bottom Navigation Bar */}
-            {/* Action Bar (persistent at bottom) */}
             <nav
                 className="bottom-nav-bar"
-                style={{
-                    transform: `translateX(-50%) translateY(${dragY * 0.15}px)`,
-                    transition: dragY === 0 ? 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
-                }}
+                ref={navRef}
             >
                 <button className="nav-item" onClick={() => setIsListOpen(true)}>
                     <svg className="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
